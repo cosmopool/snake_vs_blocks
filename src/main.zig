@@ -1,8 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const print = std.debug.print;
-const List = @import("snake.zig").List;
-const Node = @import("snake.zig").Node;
+
 const rl = @cImport({
     @cInclude("raylib.h");
 });
@@ -10,7 +9,8 @@ const rl = @cImport({
 var useMouse: bool = false;
 var paused: bool = false;
 var gameOver = false;
-const fps = 60;
+const fps: f32 = 60;
+const frameTime: f32 = 1 / fps;
 const fontSize = 10;
 const screenWidth = 400;
 const screenHeight = 700;
@@ -21,15 +21,24 @@ const movementSpeed = 500;
 // const rows = std.math.round(screenHeight / cellSize);
 
 const snakeVecSize = 2;
+var snakeSize: i16 = 5;
+var snake: [100]f32 = undefined;
+var snakeOldPos: [100]f32 = undefined;
 const circleRadius = 10;
 const circleSize = circleRadius * 2;
 const margin: f16 = 4;
-// const leftScreenLimit = circleSize;
-// const rightScreenLimit = screenWidth - circleSize;
-var snakeSize: i16 = 5;
+const leftScreenLimit = circleSize;
+const rightScreenLimit = screenWidth - circleSize;
 const visibleSnakeSizeLimit: usize = std.math.round((screenHeight / 2) / (circleSize + margin)) * snakeVecSize;
 var visibleTail = visibleSnakeSizeLimit;
-var snake: List = undefined;
+// const maxVel: f32 = (screenWidth / (1 / fps)) - 10;
+const maxVel = 1000;
+
+const SnakeHead = struct {
+    x: *f32 = &snake[0],
+    y: *f32 = &snake[1],
+};
+const head = SnakeHead{};
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
@@ -75,44 +84,67 @@ fn draw() anyerror!void {
 const Snake = struct {
     inline fn init() !void {
         const size: usize = @intCast(snakeSize);
-        var snakeX: [5]f32 = undefined;
-        var snakeY: [5]f32 = undefined;
         for (0..size) |i| {
-            snakeX[i] = screenWidth / 2;
-            snakeY[i] = if (i > 0) snakeY[i - 1] + circleRadius * 2 else screenHeight / 2;
+            const index = i * snakeVecSize;
+            const x = 0 + index;
+            const y = 1 + index;
+            snake[x] = screenWidth / 2;
+            snake[y] = if (index > 0) snake[index - 1] + circleRadius * 2 else screenHeight / 2;
+            snakeOldPos[x] = snake[x];
+            snakeOldPos[y] = snake[y];
         }
-        snake = try List.init(std.heap.page_allocator, snakeX, snakeY);
     }
 
     fn updatePosition(deltaTime: f32) !void {
         visibleTail = if (snakeSize > visibleSnakeSizeLimit) visibleSnakeSizeLimit else @intCast(snakeSize);
-        var newX = snake.head.x;
-        const newY = snake.head.y;
+        var newHeadX: f32 = head.x.*;
 
         if (useMouse) {
-            newX = @floatFromInt(rl.GetMouseX());
+            newHeadX = @floatFromInt(rl.GetMouseX());
         } else {
             if (rl.IsKeyDown(rl.KEY_LEFT)) {
-                newX -= 1 * movementSpeed * deltaTime;
+                newHeadX -= 1 * movementSpeed * deltaTime;
             } else if (rl.IsKeyDown(rl.KEY_RIGHT)) {
-                newX += 1 * movementSpeed * deltaTime;
+                newHeadX += 1 * movementSpeed * deltaTime;
             }
         }
+        newHeadX = math.clamp(newHeadX, 0 + circleSize, screenWidth - circleSize);
 
-        snake.head.x = math.clamp(snake.head.x, 0 + circleRadius, screenWidth - circleRadius);
+        //// SET HEAD POSITION
+        const headDx = newHeadX - head.x.*;
+        const headVel: f32 = limitVelocity(headDx, deltaTime, maxVel);
+        head.x.* = head.x.* + (headVel * deltaTime);
 
-        // if (newX != snake.head.x or newY != snake.head.y) try snake.move(newX, newY);
-        const deltaX = snake.head.x - newX;
-        const deltaY = snake.head.y - newY;
-        if (abs(deltaX) >= circleSize or abs(deltaY) >= circleSize) try snake.move(newX, newY);
+        for (1..visibleTail) |i| {
+            const x = i * snakeVecSize;
+            const y = x + 1;
+            const prevBodyX = x - snakeVecSize;
+            const prevBodyY = y - snakeVecSize;
+            //// LIMIT VELOCITY
+            const dx = snake[prevBodyX] - snakeOldPos[prevBodyX];
+            const vel = limitVelocity(dx, deltaTime, maxVel);
+            //// NORMALIZE VELOCITY
+            const velNorm = normalize(vel, 0, -maxVel, circleSize * 0.95);
+            //// CALCULATE VECTOR
+            const newY = std.math.sqrt(circleSize * circleSize - velNorm * velNorm);
+            //// SET POSITIONS
+            const dt = deltaTime * 40;
+            snake[x] = cosineInterpolation(snake[x], snake[prevBodyX] + velNorm, dt);
+            snake[y] = cosineInterpolation(snake[y], snake[prevBodyY] + newY, dt);
+        }
+
+        //// UPDATE OLD SNAKE POSITIONS
+        snakeOldPos = snake;
     }
 
     fn draw() !void {
-        for (0..snake.len) |i| {
-            const node = try snake.get(i);
-            rl.DrawCircle(@intFromFloat(node.x), @intFromFloat(node.y), circleRadius, rl.RED);
+        for (0..visibleTail) |i| {
+            const index = i * snakeVecSize;
+            const x = 0 + index;
+            const y = 1 + index;
+            rl.DrawCircle(@intFromFloat(snake[x]), @intFromFloat(snake[y]), circleRadius, rl.RED);
         }
-        // rl.DrawText(rl.TextFormat("%i", .{snakeSize}), @intFromFloat(snake.head.x + 2), @intFromFloat(snake.head.y - 20), fontSize, rl.WHITE);
+        // rl.DrawText(rl.TextFormat("%i", .{snakeSize}), @intFromFloat(head.x.* + 2), @intFromFloat(head.y.* - 20), fontSize, rl.WHITE);
     }
 
     fn checkCollision(x1: f32, y1: f32, x2: f32, y2: f32, size: f32) bool {
@@ -127,4 +159,31 @@ const Snake = struct {
 fn abs(num: anytype) @TypeOf(num) {
     if (std.math.sign(num) == -1) return num * -1;
     return num;
+}
+
+fn normalize(num: f32, min: f32, max: f32, n: f32) f32 {
+    return ((num - min) / (max - min)) * n;
+}
+
+fn limitVelocity(dx: f32, dt: f32, limit: f32) f32 {
+    if (dt == 0 or dx == 0) return 0;
+    const vel: f32 = dx / dt;
+    if (vel < 0) {
+        return if (vel < -limit) -limit else vel;
+    } else {
+        return if (vel > limit) limit else vel;
+    }
+}
+
+fn precision(value: f32, comptime limit: u8) f32 {
+    const multiplier = std.math.pow(f32, 10, limit);
+    const rounded = std.math.round(value * multiplier);
+    // std.log.debug("r: {d}, multiplier: {d}, res: {d}", .{ rounded, multiplier, rounded / multiplier });
+    return rounded / multiplier;
+}
+
+fn cosineInterpolation(y1: f32, y2: f32, mu: f32) f32 {
+    var mu2: f32 = 0;
+    mu2 = (1 - std.math.cos(mu * std.math.pi)) / 2;
+    return (y1 * (1 - mu2) + y2 * mu2);
 }
