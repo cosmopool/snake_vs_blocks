@@ -11,7 +11,6 @@ var paused: bool = false;
 var gameOver = false;
 const fps: f32 = 60;
 const frameTime: f32 = 1 / fps;
-const fontSize = 10;
 const screenWidth = 400;
 const screenHeight = 700;
 const movementSpeed = 500;
@@ -72,13 +71,21 @@ fn draw() anyerror!void {
     defer rl.EndDrawing();
     rl.ClearBackground(rl.BLACK);
 
-    if (gameOver) {
-        rl.DrawText("Game Over", @intFromFloat(0), @intFromFloat(screenHeight / 2), 50, rl.WHITE);
-    }
-
     try Snake.draw();
 
+    if (gameOver) drawAtCenter("Game Over", 50, null);
+    if (paused) drawAtCenter("paused", null, null);
+
     rl.DrawFPS(rl.GetScreenWidth() - 95, 10);
+}
+
+const Color = rl.CLITERAL(rl.Color);
+
+fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
+    const fontSize = size orelse 30;
+    const textSize = rl.MeasureText(text, @intCast(fontSize));
+    const x = @divTrunc(screenWidth, 2) - @divTrunc(textSize, 2);
+    rl.DrawText(text, @intCast(x), @intFromFloat(screenHeight / 2), @intCast(fontSize), color orelse rl.WHITE);
 }
 
 const Snake = struct {
