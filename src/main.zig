@@ -14,10 +14,6 @@ const frameTime: f32 = 1 / fps;
 const screenWidth = 400;
 const screenHeight = 700;
 const movementSpeed = 500;
-// const columns = 5;
-// const cellSize: f32 = screenWidth / columns;
-// const rectSize: f32 = cellSize - 1;
-// const rows = std.math.round(screenHeight / cellSize);
 
 const snakeVecSize = 2;
 var snakeSize: i16 = 5;
@@ -30,7 +26,6 @@ const leftScreenLimit = circleSize;
 const rightScreenLimit = screenWidth - circleSize;
 const visibleSnakeSizeLimit: usize = std.math.round((screenHeight / 2) / (circleSize + margin)) * snakeVecSize;
 var visibleTail = visibleSnakeSizeLimit;
-// const maxVel: f32 = (screenWidth / (1 / fps)) - 10;
 const maxVel = 1000;
 
 const SnakeHead = struct {
@@ -103,45 +98,7 @@ const Snake = struct {
     }
 
     fn updatePosition(deltaTime: f32) !void {
-        visibleTail = if (snakeSize > visibleSnakeSizeLimit) visibleSnakeSizeLimit else @intCast(snakeSize);
-        var newHeadX: f32 = head.x.*;
-
-        if (useMouse) {
-            newHeadX = @floatFromInt(rl.GetMouseX());
-        } else {
-            if (rl.IsKeyDown(rl.KEY_LEFT)) {
-                newHeadX -= 1 * movementSpeed * deltaTime;
-            } else if (rl.IsKeyDown(rl.KEY_RIGHT)) {
-                newHeadX += 1 * movementSpeed * deltaTime;
-            }
-        }
-        newHeadX = math.clamp(newHeadX, 0 + circleSize, screenWidth - circleSize);
-
-        //// SET HEAD POSITION
-        const headDx = newHeadX - head.x.*;
-        const headVel: f32 = limitVelocity(headDx, deltaTime, maxVel);
-        head.x.* = head.x.* + (headVel * deltaTime);
-
-        for (1..visibleTail) |i| {
-            const x = i * snakeVecSize;
-            const y = x + 1;
-            const prevBodyX = x - snakeVecSize;
-            const prevBodyY = y - snakeVecSize;
-            //// LIMIT VELOCITY
-            const dx = snake[prevBodyX] - snakeOldPos[prevBodyX];
-            const vel = limitVelocity(dx, deltaTime, maxVel);
-            //// NORMALIZE VELOCITY
-            const velNorm = normalize(vel, 0, -maxVel, circleSize * 0.95);
-            //// CALCULATE VECTOR
-            const newY = std.math.sqrt(circleSize * circleSize - velNorm * velNorm);
-            //// SET POSITIONS
-            const dt = deltaTime * 40;
-            snake[x] = cosineInterpolation(snake[x], snake[prevBodyX] + velNorm, dt);
-            snake[y] = cosineInterpolation(snake[y], snake[prevBodyY] + newY, dt);
-        }
-
-        //// UPDATE OLD SNAKE POSITIONS
-        snakeOldPos = snake;
+        _ = deltaTime;
     }
 
     fn draw() !void {
@@ -182,15 +139,17 @@ fn limitVelocity(dx: f32, dt: f32, limit: f32) f32 {
     }
 }
 
-fn precision(value: f32, comptime limit: u8) f32 {
-    const multiplier = std.math.pow(f32, 10, limit);
-    const rounded = std.math.round(value * multiplier);
-    // std.log.debug("r: {d}, multiplier: {d}, res: {d}", .{ rounded, multiplier, rounded / multiplier });
-    return rounded / multiplier;
-}
-
 fn cosineInterpolation(y1: f32, y2: f32, mu: f32) f32 {
     var mu2: f32 = 0;
     mu2 = (1 - std.math.cos(mu * std.math.pi)) / 2;
     return (y1 * (1 - mu2) + y2 * mu2);
+}
+
+var posMutex = Mutex{};
+fn physics() noreturn {
+    while (true) {
+        // while (!posMutex.tryLock()) snake.len;
+        // posMutex.unlock();
+        std.time.sleep(std.time.ns_per_ms * 10);
+    }
 }
