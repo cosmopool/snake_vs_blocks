@@ -20,10 +20,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const raylib = raylibSdk.addRaylib(b, target, optimize, .{}) catch |err| {
-        std.debug.print("Error when add raylib to build: {}", .{err});
-        return;
-    };
+    const raylib = raylibSdk.addRaylib(b, target.query, optimize, .{});
     exe.addIncludePath(.{ .path = "raylib/src" });
     exe.linkLibrary(raylib);
 
