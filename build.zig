@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylibSdk = @import("raylib/src/build.zig");
+const raylibSdk = @import("raylib");
 
 pub fn build(b: *std.Build) void {
     // Standard target options allows the person running `zig build` to choose
@@ -20,7 +20,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const raylib = raylibSdk.addRaylib(b, target.query, optimize, .{});
+    // const raylib_dependency = b.dependency("raylibSdk", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    // const raylib_module = raylib_dependency.module("raylibSdk");
+    // exe.root_module.addImport("raylib", raylib_module);
+
+    const raylib = try raylibSdk.addRaylib(b, target, optimize, .{});
     exe.addIncludePath(.{ .path = "raylib/src" });
     exe.linkLibrary(raylib);
 
