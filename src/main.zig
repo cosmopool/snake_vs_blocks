@@ -14,9 +14,6 @@ const rl = @cImport({
 
 const Color = rl.CLITERAL(rl.Color);
 
-const tenMs = std.time.ns_per_us * 10;
-var lastTime: i64 = 0;
-
 var deltaTime: f32 = 0;
 var useMouse: bool = false;
 var paused: bool = false;
@@ -60,10 +57,6 @@ pub fn main() !void {
 
     direction = @Vector(2, f32){ snakeHeadX, snakeHeadY };
 
-    _ = Thread.spawn(.{}, fixedUpdate, .{}) catch |err| {
-        std.debug.print("error from thread: {}", .{err});
-    };
-
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) paused = !paused;
         if (!paused and !gameOver) try update();
@@ -75,13 +68,10 @@ fn update() anyerror!void {
     deltaTime = rl.GetFrameTime();
 
     if (snakeSize <= 0) gameOver = true;
-    const now = std.time.microTimestamp();
-    if (now - lastTime < tenMs) return;
 
     // if (rl.IsKeyPressed(rl.KEY_M)) useMouse = !useMouse;
 
-    try updateSnakePosition(deltaTime);
-    lastTime = now;
+    try updateSnakePosition();
 }
 
 fn updateSnakePosition() !void {
@@ -148,31 +138,4 @@ fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
     const textSize = rl.MeasureText(text, @intCast(fontSize));
     const x = @divTrunc(screenWidth, 2) - @divTrunc(textSize, 2);
     rl.DrawText(text, @intCast(x), @intFromFloat(screenHeight / 2), @intCast(fontSize), color orelse rl.WHITE);
-}
-
-var fixedUpdateMutex = Mutex{};
-fn fixedUpdate() !void {
-    while (true) {
-        const now = std.time.microTimestamp();
-        if (now - lastTime < tenMs) continue;
-
-        const mag = std.math.sqrt(mouseX * mouseX + mouseY * mouseY);
-        if (mag == 0) return;
-
-        direction[0] = (mouseX / mag);
-        direction[1] = (mouseY / mag);
-
-        // calculate snake head direction vector
-        const magnitude: f32 = std.math.sqrt(mouseX * mouseX + mouseY * mouseY);
-        direction[0] = mouseX / magnitude;
-        direction[1] = mouseY / magnitude;
-
-        // position snake head
-        snakeHeadX += direction[0] * speed * deltaTime;
-        fixedUpdateMutex.lock();
-        try snake.add(snakeHeadX, centerY);
-        fixedUpdateMutex.unlock();
-
-        lastTime = now;
-    }
 }
