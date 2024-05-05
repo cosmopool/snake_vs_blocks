@@ -26,20 +26,14 @@ const centerY = @divTrunc(screenHeight, 2);
 const snakeVecSize = 2;
 var snakeSize: i16 = 20;
 const circleRadius = 10;
-const circleDiameter = 20;
-const circleSize = circleRadius * 2;
+const circleDiameter = circleRadius * 2;
 const margin: f16 = 4;
-const leftScreenLimit = circleSize;
-const rightScreenLimit = screenWidth - circleSize;
-const visibleSnakeSizeLimit: usize = std.math.round((screenHeight / 2) / (circleSize + margin)) * snakeVecSize;
-var visibleTail = visibleSnakeSizeLimit;
 const speed: f32 = 200;
+const boardSpeed = 100;
 
-var snakeHeadX: f32 = centerX;
-var snakeHeadY: f32 = centerY;
+var snakeHead = Vector2{ .x = centerX, .y = centerY };
 var direction = Vector2{ .x = centerX, .y = centerY };
 
-const boardSpeed = 100;
 const snakePathLen = 200;
 var snakePathX: [snakePathLen]?f32 = undefined;
 var snakePathY: [snakePathLen]?f32 = undefined;
@@ -79,8 +73,8 @@ fn updateSnakePosition() !void {
 
     // calculate mouse relative distance from snake head
     const mouseDiff = Vector2{
-        .x = mouse.x - snakeHeadX,
-        .y = mouse.y - snakeHeadY,
+        .x = mouse.x - snakeHead.x,
+        .y = mouse.y - snakeHead.y,
     };
 
     // calculate snake head direction vector
@@ -93,14 +87,13 @@ fn updateSnakePosition() !void {
     // if snake changed direction set a checkpoint in it's path
     if (didChangeDirection(&direction, &currentDirection)) {
         assert(direction.direction() != currentDirection.direction());
-        addCheckpointInPath(.{ .x = snakeHeadX, .y = snakeHeadY });
+        addCheckpointInPath(.{ .x = snakeHead.x, .y = snakeHead.y });
     }
     direction = currentDirection;
 
     // update snake head position
-    // snake.head.x += direction.x * 3000 * deltaTime;
-    snakeHeadX = mouse.x;
-    assert(snakeHeadX >= 0 and snakeHeadX <= screenWidth);
+    snakeHead.x = mouse.x;
+    assert(snakeHead.x >= 0 and snakeHead.x <= screenWidth);
 }
 
 fn didChangeDirection(old: *const Vector2, current: *const Vector2) bool {
@@ -205,18 +198,18 @@ fn drawCirclesBetween(start: *const Vector2, end: *const Vector2, remaningCircle
 }
 
 fn drawSnake() !void {
-    const endPosX = -direction.x * 100 + snakeHeadX;
-    const endPosY = -direction.y * 100 + snakeHeadY;
+    const endPosX = -direction.x * 100 + snakeHead.x;
+    const endPosY = -direction.y * 100 + snakeHead.y;
 
     // direction vector
     rl.DrawLine(
-        @intFromFloat(snakeHeadX),
-        @intFromFloat(snakeHeadY),
+        @intFromFloat(snakeHead.x),
+        @intFromFloat(snakeHead.y),
         @intFromFloat(endPosX),
         @intFromFloat(endPosY),
         rl.WHITE,
     );
-    drawBodyNodeAt(snakeHeadX, snakeHeadY);
+    drawBodyNodeAt(snakeHead.x, snakeHead.y);
 
     var remaningCircles: i16 = snakeSize;
     var idx: u16 = 0;
@@ -227,10 +220,8 @@ fn drawSnake() !void {
 
         var prevNode: Vector2 = undefined;
         if (idx == 0) {
-            // n = 1;
-            prevNode = Vector2{ .x = snakeHeadX, .y = snakeHeadY };
+            prevNode = Vector2{ .x = snakeHead.x, .y = snakeHead.y };
         } else {
-            // n = @floatFromInt(idx);
             prevNode = Vector2{
                 .x = snakePathX[idx - 1] orelse break,
                 .y = snakePathY[idx - 1] orelse break,
