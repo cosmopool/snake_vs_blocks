@@ -178,19 +178,21 @@ fn drawBodyNodeAt(x: f32, y: f32) void {
     rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
 }
 
-fn drawCirclesBetween(start: *const Vector2, end: *const Vector2) void {
+fn drawCirclesBetween(start: *const Vector2, end: *const Vector2, remaningCircles: *i16) void {
     const path = start.directionVec(end);
     const distance = path.magnitude();
     const howManyFit = @ceil(distance / circleDiameter);
     const circle = path.normalize();
 
     for (0..@intFromFloat(howManyFit)) |i| {
+        if (remaningCircles.* == 0) break;
         const n: f32 = @floatFromInt(i);
         const scale = circle.multiply(circleDiameter * n);
         const x = scale.x + start.x;
         const y = scale.y + start.y;
         if (y > screenHeight + 50) break;
         rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
+        remaningCircles.* -= 1;
     }
 
     rl.DrawLine(
@@ -216,6 +218,7 @@ fn drawSnake() !void {
     );
     drawBodyNodeAt(snakeHeadX, snakeHeadY);
 
+    var remaningCircles: i16 = snakeSize;
     var idx: u16 = 0;
     while (idx < snakePathLen) : (idx += 1) {
         const pathX = snakePathX[idx] orelse break;
@@ -234,7 +237,7 @@ fn drawSnake() !void {
             };
         }
 
-        drawCirclesBetween(&prevNode, &currentNode);
+        drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
     }
 }
 
