@@ -126,10 +126,9 @@ pub const Vector = struct {
 
     /// Get direction of [x]
     pub fn direction(self: *const Vector) i8 {
-        const threshold = 0.1;
         const n = self.data[0];
-        if (n > 0 + threshold) return 1;
-        if (n < 0 - threshold) return -1;
+        if (n > 0 + 0) return 1;
+        if (n < 0 - 0) return -1;
         return 0;
     }
 
