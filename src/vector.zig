@@ -215,6 +215,12 @@ pub const Vector = struct {
         // return @sqrt(self.dot(self.sub(other)));
         return length(&self.sub(other));
     }
+    ///
+    /// Construct new vector after multiplying each components by a given scalar
+    pub fn splat(scalar: f32) Vector {
+        const result = @as(Vec2, @splat(scalar));
+        return new(result[0], result[1]);
+    }
 };
 
 test "divide by 2" {
