@@ -77,7 +77,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
     // limit mouse position to window boundaries
     const mouse = Vector.new(
         std.math.clamp(rl.GetMousePosition().x, circleRadius, screenWidth - circleRadius),
-        std.math.clamp(rl.GetMousePosition().y, circleRadius, centerY - circleRadius),
+        centerY,
     );
     assert(mouse.x() >= 0 and mouse.x() <= screenWidth);
     assert(mouse.y() >= 0 and mouse.y() <= screenHeight);
@@ -90,7 +90,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // if snake changed direction set a checkpoint in it's path
     if (lastPathNodeDirection != diffDirection) {
-        addNodeInPath(.{ .x = mouse.x(), .y = centerY });
+        addNodeInPath(mouse);
         lastPathNodeDirection = diffDirection;
     }
 
@@ -126,7 +126,7 @@ fn updateSnakePathPosition(deltaTime: f32) void {
     }
 }
 
-fn addNodeInPath(checkpoint: Vec2) void {
+fn addNodeInPath(newNode: Vector) void {
     var i: usize = snakePathLen / snakePathVecSize;
     while (i > 1) : (i -= snakePathVecSize) {
         if (i >= snakePathLen / snakePathVecSize) continue;
@@ -141,8 +141,8 @@ fn addNodeInPath(checkpoint: Vec2) void {
     }
 
     // add new checkpoint values
-    snakePath[2] = checkpoint.x;
-    snakePath[3] = checkpoint.y;
+    snakePath[2] = newNode.x();
+    snakePath[3] = newNode.y();
 }
 
 fn draw() anyerror!void {
