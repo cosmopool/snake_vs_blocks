@@ -237,19 +237,7 @@ fn drawSnake() !void {
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
         const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
 
-        const p0 = @Vector(2, f32){ prevNode.x(), prevNode.y() };
-        const p1 = @Vector(2, f32){ currentNode.x(), currentNode.y() };
-        const p2 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 1], snakePath[y + snakePathVecSize * 2] };
-        const p3 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 2], snakePath[y + snakePathVecSize * 2] };
-
         drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
-        // var i: f32 = 0;
-        // while (i <= 1.0) : (i += 0.01) {
-        const cat = catmullRom(&p0, &p1, &p2, &p3, @floatFromInt(index), 0.5);
-        if (std.math.isNan(cat[0]) or std.math.isNan(cat[1])) break;
-        // rl.DrawCircle(@intFromFloat(cat[0] + snakeHead.x), @intFromFloat(cat[1] + snakeHead.y), 1, rl.YELLOW);
-        rl.DrawCircle(@intFromFloat(cat[0]), @intFromFloat(cat[1]), circleRadius, rl.YELLOW);
-        // }
 
         rl.DrawLine(
             @intFromFloat(prevNode.x()),
@@ -258,6 +246,18 @@ fn drawSnake() !void {
             @intFromFloat(currentNode.y()),
             rl.BLUE,
         );
+
+        const p0 = @Vector(2, f32){ prevNode.x(), prevNode.y() };
+        const p1 = @Vector(2, f32){ currentNode.x(), currentNode.y() };
+        const p2 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 1], snakePath[y + snakePathVecSize * 2] };
+        const p3 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 2], snakePath[y + snakePathVecSize * 2] };
+
+        // var i: f32 = 0;
+        // while (i <= 1.0) : (i += 0.01) {
+        const cat = catmullRom(&p0, &p1, &p2, &p3, @floatFromInt(index), 0.5);
+        if (std.math.isNan(cat[0]) or std.math.isNan(cat[1])) break;
+        rl.DrawCircle(@intFromFloat(cat[0]), @intFromFloat(cat[1]), circleRadius, rl.YELLOW);
+        // }
     }
 }
 
