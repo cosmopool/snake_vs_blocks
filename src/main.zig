@@ -188,6 +188,37 @@ fn drawCirclesBetween(start: *const Vector, end: *const Vector, remaningCircles:
     );
 }
 
+fn getT(p0: *const Vector2, p1: *const Vector2, t: f32, alpha: f32) f32 {
+    const d = p1.* - p0.*;
+    const a = d[0] * d[0] + d[1] * d[1];
+    const b = std.math.pow(f32, a, alpha * 0.5);
+    return b + t;
+}
+
+fn catmullRom(p0: *const Vector2, p1: *const Vector2, p2: *const Vector2, p3: *const Vector2, t: f32, alpha: f32) Vector2 {
+    // assert(t >= 0 and t <= 1);
+    assert(alpha >= 0 and alpha <= 1);
+
+    const t0: f32 = 0.0;
+    const t1 = getT(p0, p1, t0, alpha);
+    const t2 = getT(p1, p2, t1, alpha);
+    const t3 = getT(p2, p3, t2, alpha);
+    const tt = std.math.lerp(t1, t2, t);
+
+    if (0.0 == t1) {
+        return p1.*;
+    }
+
+    const A1 = @as(Vector2, @splat((t1 - tt) / (t1 - t0))) * p0.* + @as(Vector2, @splat((tt - t0) / (t1 - t0))) * p1.*;
+    const A2 = @as(Vector2, @splat((t2 - tt) / (t2 - t1))) * p1.* + @as(Vector2, @splat((tt - t1) / (t2 - t1))) * p2.*;
+    const A3 = @as(Vector2, @splat((t3 - tt) / (t3 - t2))) * p2.* + @as(Vector2, @splat((tt - t2) / (t3 - t2))) * p3.*;
+    const B1 = @as(Vector2, @splat((t2 - tt) / (t2 - t0))) * A1 + @as(Vector2, @splat((tt - t0) / (t2 - t0))) * A2;
+    const B2 = @as(Vector2, @splat((t3 - tt) / (t3 - t1))) * A2 + @as(Vector2, @splat((tt - t1) / (t3 - t1))) * A3;
+    const C = @as(Vector2, @splat((t2 - tt) / (t2 - t1))) * B1 + @as(Vector2, @splat((tt - t1) / (t2 - t1))) * B2;
+
+    return C;
+}
+
 fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(snakePath[0], snakePath[1]);
@@ -206,7 +237,19 @@ fn drawSnake() !void {
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
         const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
 
+        const p0 = @Vector(2, f32){ prevNode.x(), prevNode.y() };
+        const p1 = @Vector(2, f32){ currentNode.x(), currentNode.y() };
+        const p2 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 1], snakePath[y + snakePathVecSize * 2] };
+        const p3 = @Vector(2, f32){ snakePath[x + snakePathVecSize * 2], snakePath[y + snakePathVecSize * 2] };
+
         drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
+        // var i: f32 = 0;
+        // while (i <= 1.0) : (i += 0.01) {
+        const cat = catmullRom(&p0, &p1, &p2, &p3, @floatFromInt(index), 0.5);
+        if (std.math.isNan(cat[0]) or std.math.isNan(cat[1])) break;
+        // rl.DrawCircle(@intFromFloat(cat[0] + snakeHead.x), @intFromFloat(cat[1] + snakeHead.y), 1, rl.YELLOW);
+        rl.DrawCircle(@intFromFloat(cat[0]), @intFromFloat(cat[1]), circleRadius, rl.YELLOW);
+        // }
 
         rl.DrawLine(
             @intFromFloat(prevNode.x()),
