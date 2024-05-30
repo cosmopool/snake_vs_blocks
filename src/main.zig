@@ -218,7 +218,7 @@ fn drawSnake() !void {
     // draw body
     const remaningCircles: i16 = snakeSize;
     _ = remaningCircles; // autofix
-    for (1..snakePathLen) |i| {
+    for (0..snakePathLen) |i| {
         const index = i * snakePathVecSize;
         if (index >= snakePathLen / snakePathVecSize) break;
         const x = 0 + index;
@@ -228,7 +228,12 @@ fn drawSnake() !void {
         if (snakePath[x] == Empty and snakePath[y] == Empty) break;
 
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
-        const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
+        var prevNode: Vector = undefined;
+        if (i == 0) {
+            prevNode = Vector.new(snakePath[0], snakePath[1] - 50);
+        } else {
+            prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
+        }
 
         // drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
 
