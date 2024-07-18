@@ -2,3 +2,4 @@ raylib/
 raylib_binds/
 zig-out/
 zig-cache/
+.zig-cache/
