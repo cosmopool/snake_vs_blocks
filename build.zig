@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "snake_blocks",
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
         .optimize = optimize,
     });
@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
     // exe.root_module.addImport("raylib", raylib_module);
 
     const raylib = try raylibSdk.addRaylib(b, target, optimize, .{});
-    exe.addIncludePath(.{ .path = "raylib/src" });
+    exe.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = "raylib/src" } });
     exe.linkLibrary(raylib);
 
     // This declares intent for the executable to be installed into the
@@ -62,7 +62,7 @@ pub fn build(b: *std.Build) void {
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.
     const lib_unit_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/vector.zig" },
+        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/vector.zig" } },
         .target = target,
         .optimize = optimize,
     });
@@ -70,7 +70,7 @@ pub fn build(b: *std.Build) void {
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
 
     const exe_unit_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
         .optimize = optimize,
     });
