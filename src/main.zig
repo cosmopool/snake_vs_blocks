@@ -168,10 +168,7 @@ fn drawSnake() !void {
         assert(snakePath[x] != Empty and snakePath[y] != Empty);
 
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
-        const prevNode = Vector.new(
-            snakePath[x - snakePathVecSize],
-            snakePath[y - snakePathVecSize],
-        );
+        const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
 
         if (showPath) drawLineFrom(currentNode, prevNode);
 
