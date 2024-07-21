@@ -161,24 +161,6 @@ fn drawBodyNodeAt(x: f32, y: f32) void {
     rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
 }
 
-fn drawCirclesBetween(start: *const Vector, end: *const Vector, remaningCircles: *i16) void {
-    const path = end.sub(start.*);
-    const distance = path.length();
-    const howManyFit = @ceil(distance / circleDiameter);
-    const circle = path.norm();
-
-    for (0..@intFromFloat(howManyFit)) |i| {
-        if (remaningCircles.* == 0) break;
-        const n: f32 = @floatFromInt(i);
-        const scale = circle.scale(circleDiameter * n);
-        const x = scale.x() + start.x();
-        const y = scale.y() + start.y();
-        if (y > screenHeight + 50) break;
-        rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
-        remaningCircles.* -= 1;
-    }
-}
-
 fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(snakePath[0], snakePath[1]);
