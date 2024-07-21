@@ -21,6 +21,7 @@ const Color = rl.CLITERAL(rl.Color);
 var useMouse: bool = false;
 var paused: bool = false;
 var gameOver = false;
+var showPath = false;
 const fps: f32 = 60;
 const screenWidth = 400;
 const screenHeight = 700;
@@ -59,6 +60,7 @@ pub fn main() !void {
 
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) paused = !paused;
+        if (rl.IsKeyPressed(rl.KEY_D)) showPath = !showPath;
         if (!paused and !gameOver) try update();
         try draw();
     }
@@ -212,6 +214,7 @@ fn drawSnake() !void {
 
         drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
 
+        if (!showPath) continue;
         rl.DrawLine(
             @intFromFloat(prevNode.x()),
             @intFromFloat(prevNode.y()),
