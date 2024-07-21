@@ -1,20 +1,14 @@
 const std = @import("std");
-const Helper = @import("helper.zig");
 const print = std.debug.print;
 const assert = std.debug.assert;
 const ArrayList = std.ArrayList;
-
 const rl = @cImport({
     @cInclude("raylib.h");
 });
 
-const Vec2 = @import("vector.zig").Vector2;
-const Vector2 = @Vector(2, f32);
 const Vector = @import("vector.zig").Vector;
 
 const Empty = 0;
-
-const allocator = std.heap.page_allocator;
 
 const Color = rl.CLITERAL(rl.Color);
 
@@ -32,10 +26,7 @@ var snakeSize: i16 = 20;
 const circleRadius = 10;
 const circleDiameter = circleRadius * 2;
 const margin: f16 = 4;
-const speed: f32 = 200;
 const boardSpeed = 180;
-
-var lastPathNodeDirection: i8 = 0;
 
 const snakePathLen = 1000;
 const snakePathVecSize = 2;
