@@ -12,12 +12,7 @@ const Empty = 0;
 
 const Color = rl.CLITERAL(rl.Color);
 var Game = @import("entities.zig").Game.new();
-
-const fps: f32 = 60;
-const screenWidth = 400;
-const screenHeight = 700;
-const centerX = @divTrunc(screenWidth, 2);
-const centerY = @divTrunc(screenHeight, 2);
+const Screen = @import("entities.zig").Screen.new();
 
 var snakeSize: i16 = 20;
 const circleRadius = 10;
@@ -32,9 +27,9 @@ const pathResolution: f32 = 3;
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
-    rl.InitWindow(screenWidth, screenHeight, "hello world!");
+    rl.InitWindow(Screen.width, Screen.height, "hello world!");
     defer rl.CloseWindow();
-    rl.SetTargetFPS(fps);
+    rl.SetTargetFPS(Screen.fps);
 
     inline for (0..snakePathLen) |i| {
         const index = i * snakePathVecSize;
@@ -44,8 +39,8 @@ pub fn main() !void {
         snakePath[x] = Empty;
         snakePath[y] = Empty;
     }
-    snakePath[0] = centerX;
-    snakePath[1] = centerY;
+    snakePath[0] = Screen.centerX;
+    snakePath[1] = Screen.centerY;
 
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
@@ -67,12 +62,13 @@ fn update() anyerror!void {
 fn updateSnakePosition(deltaTime: f32) !void {
     _ = deltaTime; // autofix
     // limit mouse position to window boundaries
+    const screenWidthLimit: f32 = Screen.width - circleRadius;
     const mouse = Vector.new(
-        std.math.clamp(rl.GetMousePosition().x, circleRadius, screenWidth - circleRadius),
-        centerY,
+        std.math.clamp(rl.GetMousePosition().x, circleRadius, screenWidthLimit),
+        Screen.centerY,
     );
-    assert(mouse.x() >= 0 and mouse.x() <= screenWidth);
-    assert(mouse.y() >= 0 and mouse.y() <= screenHeight);
+    assert(mouse.x() >= 0 and mouse.x() <= Screen.width);
+    assert(mouse.y() >= 0 and mouse.y() <= Screen.height);
 
     // last position in snakePath array
     const lastPathPos = Vector.new(snakePath[2], snakePath[3]);
@@ -85,7 +81,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // update snake head position
     snakePath[0] = mouse.x();
-    assert(snakePath[0] >= 0 and snakePath[0] <= screenWidth);
+    assert(snakePath[0] >= 0 and snakePath[0] <= Screen.width);
 }
 
 fn updateSnakePathPosition(deltaTime: f32) void {
@@ -101,7 +97,7 @@ fn updateSnakePathPosition(deltaTime: f32) void {
 
         // update checkpoint position
         const newPositionY = snakePath[y] + (boardSpeed * deltaTime);
-        if (newPositionY > screenHeight + 100) {
+        if (newPositionY > Screen.height + 100) {
             snakePath[x] = Empty;
             snakePath[y] = Empty;
         } else {
@@ -191,6 +187,6 @@ fn drawLineFrom(start: Vector, end: Vector) void {
 fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
     const fontSize = size orelse 30;
     const textSize = rl.MeasureText(text, @intCast(fontSize));
-    const x = @divTrunc(screenWidth, 2) - @divTrunc(textSize, 2);
-    rl.DrawText(text, @intCast(x), @intFromFloat(screenHeight / 2), @intCast(fontSize), color orelse rl.WHITE);
+    const x = @divTrunc(Screen.width, 2) - @divTrunc(textSize, 2);
+    rl.DrawText(text, @intCast(x), Screen.centerY, @intCast(fontSize), color orelse rl.WHITE);
 }
