@@ -87,7 +87,6 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // update snake head position
     snakePath[0] = mouse.x();
-    // snakeHead.x += currentDirection.x() * 3000 * deltaTime;
     assert(snakePath[0] >= 0 and snakePath[0] <= screenWidth);
 }
 
