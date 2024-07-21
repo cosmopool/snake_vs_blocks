@@ -13,11 +13,8 @@ const Empty = 0;
 const Color = rl.CLITERAL(rl.Color);
 var Game = @import("entities.zig").Game.new();
 const Screen = @import("entities.zig").Screen.new();
+var Snake = @import("entities.zig").Snake.new();
 
-var snakeSize: i16 = 20;
-const circleRadius = 10;
-const circleDiameter = circleRadius * 2;
-const margin: f16 = 4;
 const boardSpeed = 180;
 
 const snakePathLen = 1000;
@@ -52,7 +49,7 @@ pub fn main() !void {
 }
 
 fn update() anyerror!void {
-    if (snakeSize <= 0) Game.gameOver = true;
+    if (Snake.size <= 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
     updateSnakePathPosition(deltaTime);
@@ -62,9 +59,10 @@ fn update() anyerror!void {
 fn updateSnakePosition(deltaTime: f32) !void {
     _ = deltaTime; // autofix
     // limit mouse position to window boundaries
-    const screenWidthLimit: f32 = Screen.width - circleRadius;
+    const radius: f32 = @floatFromInt(Snake.radius);
+    const screenWidthLimit: f32 = Screen.width - radius;
     const mouse = Vector.new(
-        std.math.clamp(rl.GetMousePosition().x, circleRadius, screenWidthLimit),
+        std.math.clamp(rl.GetMousePosition().x, radius, screenWidthLimit),
         Screen.centerY,
     );
     assert(mouse.x() >= 0 and mouse.x() <= Screen.width);
@@ -140,7 +138,7 @@ fn draw() anyerror!void {
 }
 
 fn drawBodyNodeAt(x: f32, y: f32) void {
-    rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
+    rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(Snake.radius), rl.RED);
 }
 
 fn drawSnake() !void {
@@ -149,7 +147,7 @@ fn drawSnake() !void {
 
     // draw body
     var lastBodyNodeUsed = Vector.new(0, 0);
-    var remaningCircles: i16 = snakeSize;
+    var remaningCircles: i16 = Snake.size;
     for (1..snakePathLen) |i| {
         const index = i * snakePathVecSize;
         if (index >= snakePathLen / snakePathVecSize) break;
@@ -165,7 +163,7 @@ fn drawSnake() !void {
         if (Game.showPath) drawLineFrom(currentNode, prevNode);
 
         if (remaningCircles <= 0) continue;
-        if (currentNode.distance(lastBodyNodeUsed) < circleDiameter) continue;
+        if (currentNode.distance(lastBodyNodeUsed) < Snake.diameter) continue;
 
         if (!Game.showBody) continue;
         drawBodyNodeAt(currentNode.x(), currentNode.y());

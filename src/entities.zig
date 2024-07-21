@@ -27,3 +27,15 @@ pub const Screen = struct {
         };
     }
 };
+
+pub const Snake = struct {
+    const _radius: i8 = 10;
+
+    size: i16 = 5,
+    radius: i8 = _radius,
+    diameter: f32 = _radius * 2,
+
+    pub fn new() Snake {
+        return Snake{};
+    }
+};
