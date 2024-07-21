@@ -37,9 +37,10 @@ const boardSpeed = 180;
 
 var lastPathNodeDirection: i8 = 0;
 
-const snakePathLen = 400;
+const snakePathLen = 1000;
 const snakePathVecSize = 2;
 var snakePath: [snakePathLen]f32 = undefined;
+const pathResolution: f32 = 3;
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
@@ -84,16 +85,13 @@ fn updateSnakePosition(deltaTime: f32) !void {
     assert(mouse.x() >= 0 and mouse.x() <= screenWidth);
     assert(mouse.y() >= 0 and mouse.y() <= screenHeight);
 
-    // calculate mouse relative distance from snake head
-    const mouseDiff = mouse.sub(Vector.new(snakePath[0], snakePath[1])).norm();
+    // last position in snakePath array
+    const lastPathPos = Vector.new(snakePath[2], snakePath[3]);
 
-    // calculate snake head direction vector
-    const diffDirection = mouseDiff.direction();
-
-    // if snake changed direction set a checkpoint in it's path
-    if (lastPathNodeDirection != diffDirection) {
+    // create a new node in snakePath
+    const distanceToLastPosition = mouse.distance(lastPathPos);
+    if (distanceToLastPosition >= pathResolution) {
         addNodeInPath(mouse);
-        lastPathNodeDirection = diffDirection;
     }
 
     // update snake head position
@@ -166,8 +164,9 @@ fn drawSnake() !void {
     drawBodyNodeAt(snakePath[0], snakePath[1]);
 
     // draw body
+    var lastBodyNodeUsed = Vector.new(0, 0);
     var remaningCircles: i16 = snakeSize;
-    for (0..snakePathLen) |i| {
+    for (1..snakePathLen) |i| {
         const index = i * snakePathVecSize;
         if (index >= snakePathLen / snakePathVecSize) break;
         const x = 0 + index;
@@ -177,23 +176,30 @@ fn drawSnake() !void {
         assert(snakePath[x] != Empty and snakePath[y] != Empty);
 
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
-        var prevNode: Vector = undefined;
-        if (i == 0) {
-            prevNode = Vector.new(snakePath[0], snakePath[1]);
-        } else {
-            prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
-        }
-
-
-        if (!showPath) continue;
-        rl.DrawLine(
-            @intFromFloat(prevNode.x()),
-            @intFromFloat(prevNode.y()),
-            @intFromFloat(currentNode.x()),
-            @intFromFloat(currentNode.y()),
-            rl.BLUE,
+        const prevNode = Vector.new(
+            snakePath[x - snakePathVecSize],
+            snakePath[y - snakePathVecSize],
         );
+
+        if (showPath) drawLineFrom(currentNode, prevNode);
+
+        if (remaningCircles <= 0) continue;
+        if (currentNode.distance(lastBodyNodeUsed) < circleDiameter) continue;
+
+        drawBodyNodeAt(currentNode.x(), currentNode.y());
+        lastBodyNodeUsed = currentNode;
+        remaningCircles -= 1;
     }
+}
+
+fn drawLineFrom(start: Vector, end: Vector) void {
+    return rl.DrawLine(
+        @intFromFloat(start.x()),
+        @intFromFloat(start.y()),
+        @intFromFloat(end.x()),
+        @intFromFloat(end.y()),
+        rl.BLUE,
+    );
 }
 
 fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
