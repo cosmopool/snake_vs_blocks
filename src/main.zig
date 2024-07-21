@@ -11,8 +11,8 @@ const Vector = @import("vector.zig").Vector;
 const Empty = 0;
 
 const Color = rl.CLITERAL(rl.Color);
-var Game = @import("entities.zig").Game.new();
 const Screen = @import("entities.zig").Screen.new();
+var Game = @import("entities.zig").Game.new();
 var Snake = @import("entities.zig").Snake.new();
 
 const boardSpeed = 180;
