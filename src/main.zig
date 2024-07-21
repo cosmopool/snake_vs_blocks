@@ -11,12 +11,8 @@ const Vector = @import("vector.zig").Vector;
 const Empty = 0;
 
 const Color = rl.CLITERAL(rl.Color);
+var Game = @import("entities.zig").Game.new();
 
-var useMouse: bool = false;
-var paused: bool = false;
-var gameOver = false;
-var showPath = false;
-var showBody = false;
 const fps: f32 = 60;
 const screenWidth = 400;
 const screenHeight = 700;
@@ -52,16 +48,16 @@ pub fn main() !void {
     snakePath[1] = centerY;
 
     while (!rl.WindowShouldClose()) {
-        if (rl.IsKeyPressed(rl.KEY_SPACE)) paused = !paused;
-        if (rl.IsKeyPressed(rl.KEY_D)) showPath = !showPath;
-        if (rl.IsKeyPressed(rl.KEY_B)) showBody = !showBody;
-        if (!paused and !gameOver) try update();
+        if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
+        if (rl.IsKeyPressed(rl.KEY_D)) Game.showPath = !Game.showPath;
+        if (rl.IsKeyPressed(rl.KEY_B)) Game.showBody = !Game.showBody;
+        if (!Game.paused and !Game.gameOver) try update();
         try draw();
     }
 }
 
 fn update() anyerror!void {
-    if (snakeSize <= 0) gameOver = true;
+    if (snakeSize <= 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
     updateSnakePathPosition(deltaTime);
@@ -141,8 +137,8 @@ fn draw() anyerror!void {
 
     try drawSnake();
 
-    if (gameOver) drawAtCenter("GAME OVER", 50, null);
-    if (paused) drawAtCenter("PAUSED", null, null);
+    if (Game.gameOver) drawAtCenter("GAME OVER", 50, null);
+    if (Game.paused) drawAtCenter("PAUSED", null, null);
 
     rl.DrawFPS(rl.GetScreenWidth() - 95, 10);
 }
@@ -170,12 +166,12 @@ fn drawSnake() !void {
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
         const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
 
-        if (showPath) drawLineFrom(currentNode, prevNode);
+        if (Game.showPath) drawLineFrom(currentNode, prevNode);
 
         if (remaningCircles <= 0) continue;
         if (currentNode.distance(lastBodyNodeUsed) < circleDiameter) continue;
 
-        if (!showBody) continue;
+        if (!Game.showBody) continue;
         drawBodyNodeAt(currentNode.x(), currentNode.y());
         lastBodyNodeUsed = currentNode;
         remaningCircles -= 1;
