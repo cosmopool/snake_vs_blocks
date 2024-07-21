@@ -187,37 +187,12 @@ fn getT(p0: Vector, p1: Vector, t: f32, alpha: f32) f32 {
     return b + t;
 }
 
-fn catmullRom(p0: Vector, p1: Vector, p2: Vector, p3: Vector, t: f32, alpha: f32) Vector {
-    // assert(t >= 0 and t <= 1);
-    assert(alpha >= 0 and alpha <= 1);
-
-    const t0: f32 = 0.0;
-    const t1 = getT(p0, p1, t0, alpha);
-    const t2 = getT(p1, p2, t1, alpha);
-    const t3 = getT(p2, p3, t2, alpha);
-    const tt = std.math.lerp(t1, t2, t);
-
-    if (0.0 == t1) {
-        return p1;
-    }
-
-    const A1 = Vector.splat((t1 - tt) / (t1 - t0)).mul(p0).add(Vector.splat((tt - t0) / (t1 - t0)).mul(p1));
-    const A2 = Vector.splat((t2 - tt) / (t2 - t1)).mul(p1).add(Vector.splat((tt - t1) / (t2 - t1)).mul(p2));
-    const A3 = Vector.splat((t3 - tt) / (t3 - t2)).mul(p2).add(Vector.splat((tt - t2) / (t3 - t2)).mul(p3));
-    const B1 = Vector.splat((t2 - tt) / (t2 - t0)).mul(A1).add(Vector.splat((tt - t0) / (t2 - t0)).mul(A2));
-    const B2 = Vector.splat((t3 - tt) / (t3 - t1)).mul(A2).add(Vector.splat((tt - t1) / (t3 - t1)).mul(A3));
-    const C = Vector.splat((t2 - tt) / (t2 - t1)).mul(B1).add(Vector.splat((tt - t1) / (t2 - t1)).mul(B2));
-
-    return C;
-}
-
 fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(snakePath[0], snakePath[1]);
 
     // draw body
-    const remaningCircles: i16 = snakeSize;
-    _ = remaningCircles; // autofix
+    var remaningCircles: i16 = snakeSize;
     for (0..snakePathLen) |i| {
         const index = i * snakePathVecSize;
         if (index >= snakePathLen / snakePathVecSize) break;
@@ -235,33 +210,15 @@ fn drawSnake() !void {
             prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
         }
 
-        // drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
+        drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
 
-        // rl.DrawLine(
-        //     @intFromFloat(prevNode.x()),
-        //     @intFromFloat(prevNode.y()),
-        //     @intFromFloat(currentNode.x()),
-        //     @intFromFloat(currentNode.y()),
-        //     rl.BLUE,
-        // );
-
-        const p0 = prevNode;
-        const p1 = currentNode;
-        const p2 = Vector.new(snakePath[x + snakePathVecSize], snakePath[y + snakePathVecSize]);
-        const p3 = Vector.new(snakePath[x + (snakePathVecSize * 2)], snakePath[y + (snakePathVecSize * 2)]);
-        rl.DrawCircle(@intFromFloat(p0.x()), @intFromFloat(p0.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p1.x()), @intFromFloat(p1.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p2.x()), @intFromFloat(p2.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p3.x()), @intFromFloat(p3.y()), 5, rl.GREEN);
-
-        var t: f32 = 0;
-        while (t <= 1.0) : (t += 0.01) {
-            const cat = catmullRom(p0, p1, p2, p3, t, 0.7);
-            const cx = cat.x();
-            const cy = cat.y();
-            if (std.math.isNan(cx) or std.math.isNan(cy)) break;
-            rl.DrawCircle(@intFromFloat(cx), @intFromFloat(cy), 1, rl.YELLOW);
-        }
+        rl.DrawLine(
+            @intFromFloat(prevNode.x()),
+            @intFromFloat(prevNode.y()),
+            @intFromFloat(currentNode.x()),
+            @intFromFloat(currentNode.y()),
+            rl.BLUE,
+        );
     }
 }
 
