@@ -16,6 +16,7 @@ var useMouse: bool = false;
 var paused: bool = false;
 var gameOver = false;
 var showPath = false;
+var showBody = false;
 const fps: f32 = 60;
 const screenWidth = 400;
 const screenHeight = 700;
@@ -53,6 +54,7 @@ pub fn main() !void {
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) paused = !paused;
         if (rl.IsKeyPressed(rl.KEY_D)) showPath = !showPath;
+        if (rl.IsKeyPressed(rl.KEY_B)) showBody = !showBody;
         if (!paused and !gameOver) try update();
         try draw();
     }
@@ -176,6 +178,7 @@ fn drawSnake() !void {
         if (remaningCircles <= 0) continue;
         if (currentNode.distance(lastBodyNodeUsed) < circleDiameter) continue;
 
+        if (!showBody) continue;
         drawBodyNodeAt(currentNode.x(), currentNode.y());
         lastBodyNodeUsed = currentNode;
         remaningCircles -= 1;
