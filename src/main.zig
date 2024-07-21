@@ -114,8 +114,8 @@ fn updateSnakePathPosition(deltaTime: f32) void {
         const x = 0 + index;
         const y = 1 + index;
 
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
         if (snakePath[x] == Empty and snakePath[y] == Empty) break;
+        assert(snakePath[x] != Empty and snakePath[y] != Empty);
 
         // update checkpoint position
         const newPositionY = snakePath[y] + (boardSpeed * deltaTime);
@@ -134,8 +134,9 @@ fn addNodeInPath(newNode: Vector) void {
         if (i >= snakePathLen / snakePathVecSize) continue;
         const x = 0 + i;
         const y = 1 + i;
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
+
         if (snakePath[x] == Empty and snakePath[y] == Empty) continue;
+        assert(snakePath[x] != Empty and snakePath[y] != Empty);
 
         // shift values to the right
         snakePath[x + 2] = snakePath[x];
@@ -201,8 +202,8 @@ fn drawSnake() !void {
         const x = 0 + index;
         const y = 1 + index;
 
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
         if (snakePath[x] == Empty and snakePath[y] == Empty) break;
+        assert(snakePath[x] != Empty and snakePath[y] != Empty);
 
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
         var prevNode: Vector = undefined;
