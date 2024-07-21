@@ -14,9 +14,6 @@ const Color = rl.CLITERAL(rl.Color);
 const Screen = @import("entities.zig").Screen.new();
 var Game = @import("entities.zig").Game.new();
 var Snake = @import("entities.zig").Snake.new();
-
-const boardSpeed = 180;
-
 const snakePathLen = 1000;
 const snakePathVecSize = 2;
 var snakePath: [snakePathLen]f32 = undefined;

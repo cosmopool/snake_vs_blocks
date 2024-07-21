@@ -4,6 +4,7 @@ pub const Game = struct {
     gameOver: bool = false,
     showPath: bool = false,
     showBody: bool = true,
+    boardSpeed: f32 = 180,
 
     pub fn new() Game {
         return Game{};
