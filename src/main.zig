@@ -14,10 +14,7 @@ const Color = rl.CLITERAL(rl.Color);
 const Screen = @import("entities.zig").Screen.new();
 var Game = @import("entities.zig").Game.new();
 var Snake = @import("entities.zig").Snake.new();
-const snakePathLen = 1000;
-const snakePathVecSize = 2;
-var snakePath: [snakePathLen]f32 = undefined;
-const pathResolution: f32 = 3;
+var Path = @import("entities.zig").Path.new();
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
@@ -25,16 +22,16 @@ pub fn main() !void {
     defer rl.CloseWindow();
     rl.SetTargetFPS(Screen.fps);
 
-    inline for (0..snakePathLen) |i| {
-        const index = i * snakePathVecSize;
-        if (index >= snakePathLen) break;
+    for (0..Path.len) |i| {
+        const index = i * Path.vecSize;
+        if (index >= Path.len) break;
         const x = 0 + index;
         const y = 1 + index;
-        snakePath[x] = Empty;
-        snakePath[y] = Empty;
+        Path.positions[x] = Empty;
+        Path.positions[y] = Empty;
     }
-    snakePath[0] = Screen.centerX;
-    snakePath[1] = Screen.centerY;
+    Path.positions[0] = Screen.centerX;
+    Path.positions[1] = Screen.centerY;
 
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
@@ -65,60 +62,60 @@ fn updateSnakePosition(deltaTime: f32) !void {
     assert(mouse.x() >= 0 and mouse.x() <= Screen.width);
     assert(mouse.y() >= 0 and mouse.y() <= Screen.height);
 
-    // last position in snakePath array
-    const lastPathPos = Vector.new(snakePath[2], snakePath[3]);
+    // last position in Path.path array
+    const lastPathPos = Vector.new(Path.positions[2], Path.positions[3]);
 
-    // create a new node in snakePath
+    // create a new node in Path.path
     const distanceToLastPosition = mouse.distance(lastPathPos);
-    if (distanceToLastPosition >= pathResolution) {
+    if (distanceToLastPosition >= Path.resolution) {
         addNodeInPath(mouse);
     }
 
     // update snake head position
-    snakePath[0] = mouse.x();
-    assert(snakePath[0] >= 0 and snakePath[0] <= Screen.width);
+    Path.positions[0] = mouse.x();
+    assert(Path.positions[0] >= 0 and Path.positions[0] <= Screen.width);
 }
 
 fn updateSnakePathPosition(deltaTime: f32) void {
-    for (0..snakePathLen) |i| {
+    for (0..Path.len) |i| {
         if (i == 0) continue;
-        const index = i * snakePathVecSize;
-        if (index > snakePathLen) break;
+        const index = i * Path.vecSize;
+        if (index > Path.len) break;
         const x = 0 + index;
         const y = 1 + index;
 
-        if (snakePath[x] == Empty and snakePath[y] == Empty) break;
-        assert(snakePath[x] != Empty and snakePath[y] != Empty);
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) break;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
         // update checkpoint position
-        const newPositionY = snakePath[y] + (boardSpeed * deltaTime);
+        const newPositionY = Path.positions[y] + (Game.boardSpeed * deltaTime);
         if (newPositionY > Screen.height + 100) {
-            snakePath[x] = Empty;
-            snakePath[y] = Empty;
+            Path.positions[x] = Empty;
+            Path.positions[y] = Empty;
         } else {
-            snakePath[y] = newPositionY;
+            Path.positions[y] = newPositionY;
         }
     }
 }
 
 fn addNodeInPath(newNode: Vector) void {
-    var i: usize = snakePathLen / snakePathVecSize;
-    while (i > 1) : (i -= snakePathVecSize) {
-        if (i >= snakePathLen / snakePathVecSize) continue;
+    var i: usize = Path.len / Path.vecSize;
+    while (i > 1) : (i -= Path.vecSize) {
+        if (i >= Path.len / Path.vecSize) continue;
         const x = 0 + i;
         const y = 1 + i;
 
-        if (snakePath[x] == Empty and snakePath[y] == Empty) continue;
-        assert(snakePath[x] != Empty and snakePath[y] != Empty);
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) continue;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
         // shift values to the right
-        snakePath[x + 2] = snakePath[x];
-        snakePath[y + 2] = snakePath[y];
+        Path.positions[x + 2] = Path.positions[x];
+        Path.positions[y + 2] = Path.positions[y];
     }
 
     // add new checkpoint values
-    snakePath[2] = newNode.x();
-    snakePath[3] = newNode.y();
+    Path.positions[2] = newNode.x();
+    Path.positions[3] = newNode.y();
 }
 
 fn draw() anyerror!void {
@@ -140,22 +137,22 @@ fn drawBodyNodeAt(x: f32, y: f32) void {
 
 fn drawSnake() !void {
     // draw head
-    drawBodyNodeAt(snakePath[0], snakePath[1]);
+    drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
     // draw body
     var lastBodyNodeUsed = Vector.new(0, 0);
     var remaningCircles: i16 = Snake.size;
-    for (1..snakePathLen) |i| {
-        const index = i * snakePathVecSize;
-        if (index >= snakePathLen / snakePathVecSize) break;
+    for (1..Path.len) |i| {
+        const index = i * Path.vecSize;
+        if (index >= Path.len / Path.vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
 
-        if (snakePath[x] == Empty and snakePath[y] == Empty) break;
-        assert(snakePath[x] != Empty and snakePath[y] != Empty);
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) break;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
-        const currentNode = Vector.new(snakePath[x], snakePath[y]);
-        const prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
+        const currentNode = Vector.new(Path.positions[x], Path.positions[y]);
+        const prevNode = Vector.new(Path.positions[x - Path.vecSize], Path.positions[y - Path.vecSize]);
 
         if (Game.showPath) drawLineFrom(currentNode, prevNode);
 

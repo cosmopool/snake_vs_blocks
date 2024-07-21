@@ -40,3 +40,16 @@ pub const Snake = struct {
         return Snake{};
     }
 };
+
+pub const Path = struct {
+    pub const _len: usize = 1000;
+
+    positions: [_len]f32 = undefined,
+    len: usize = _len,
+    vecSize: usize = 2,
+    resolution: f32 = 3,
+
+    pub fn new() Path {
+        return Path{};
+    }
+};
