@@ -197,7 +197,7 @@ fn drawSnake() !void {
         const currentNode = Vector.new(snakePath[x], snakePath[y]);
         var prevNode: Vector = undefined;
         if (i == 0) {
-            prevNode = Vector.new(snakePath[0], snakePath[1] - 50);
+            prevNode = Vector.new(snakePath[0], snakePath[1]);
         } else {
             prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
         }
