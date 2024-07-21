@@ -102,10 +102,6 @@ fn updateSnakePosition(deltaTime: f32) !void {
     assert(snakePath[0] >= 0 and snakePath[0] <= screenWidth);
 }
 
-fn didChangeDirection(old: *const Vector, current: *const Vector) bool {
-    return old.direction() != current.direction();
-}
-
 fn updateSnakePathPosition(deltaTime: f32) void {
     for (0..snakePathLen) |i| {
         if (i == 0) continue;
@@ -183,13 +179,6 @@ fn drawCirclesBetween(start: *const Vector, end: *const Vector, remaningCircles:
     }
 }
 
-fn getT(p0: Vector, p1: Vector, t: f32, alpha: f32) f32 {
-    const d = p1.sub(p0);
-    const a = d.data[0] * d.data[0] + d.data[1] * d.data[1];
-    const b = std.math.pow(f32, a, alpha * 0.5);
-    return b + t;
-}
-
 fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(snakePath[0], snakePath[1]);
@@ -213,7 +202,6 @@ fn drawSnake() !void {
             prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
         }
 
-        drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
 
         if (!showPath) continue;
         rl.DrawLine(
@@ -224,10 +212,6 @@ fn drawSnake() !void {
             rl.BLUE,
         );
     }
-}
-
-fn isEmpty(x: f32, y: f32) bool {
-    return x == Empty and y == Empty;
 }
 
 fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
