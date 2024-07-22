@@ -14,7 +14,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "snake_blocks",
+        .name = "snake_vs_blocks",
         .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/main.zig" } },
         .target = target,
         .optimize = optimize,
