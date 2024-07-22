@@ -138,8 +138,9 @@ fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
+    const a = 0.5;
     // draw body
-    var lastBodyNodeUsed = Vector.new(0, 0);
+    var lastPositionUsed = Vector.new(Path.positions[0], Path.positions[1]);
     var remaningCircles: i16 = Snake.size;
     for (1..Path.len) |i| {
         const index = i * Path.vecSize;
@@ -154,13 +155,36 @@ fn drawSnake() !void {
         const prevNode = Vector.new(Path.positions[x - Path.vecSize], Path.positions[y - Path.vecSize]);
 
         if (Game.showPath) drawLineFrom(currentNode, prevNode);
-
-        if (remaningCircles <= 0) continue;
-        if (currentNode.distance(lastBodyNodeUsed) < Snake.diameter) continue;
-
         if (!Game.showBody) continue;
-        drawBodyNodeAt(currentNode.x(), currentNode.y());
-        lastBodyNodeUsed = currentNode;
+        if (remaningCircles <= 0) continue;
+        if (currentNode.distance(lastPositionUsed) < Snake.diameter + a) continue;
+
+        var centerBodyPos = prevNode;
+        var distance = centerBodyPos.distance(lastPositionUsed);
+        var lastDistance: f32 = 0;
+        while (distance < Snake.diameter - a or distance > Snake.diameter + a) {
+            if (distance < Snake.diameter - a) {}
+            if (lastDistance == distance) break;
+            if (distance < Snake.diameter - a) {
+                centerBodyPos = Vector.new(
+                    (centerBodyPos.x() + currentNode.x()) / 2,
+                    (centerBodyPos.y() + currentNode.y()) / 2,
+                );
+                if (centerBodyPos.distance(lastPositionUsed) >= distance) break;
+            } else {
+                centerBodyPos = Vector.new(
+                    (centerBodyPos.x() + prevNode.x()) / 2,
+                    (centerBodyPos.y() + prevNode.y()) / 2,
+                );
+                if (centerBodyPos.distance(lastPositionUsed) <= distance) break;
+            }
+
+            lastDistance = distance;
+            distance = centerBodyPos.distance(lastPositionUsed);
+        }
+
+        drawBodyNodeAt(centerBodyPos.x(), centerBodyPos.y());
+        lastPositionUsed = centerBodyPos;
         remaningCircles -= 1;
     }
 }
