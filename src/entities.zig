@@ -47,7 +47,7 @@ pub const Path = struct {
     positions: [_len]f32 = undefined,
     len: usize = _len,
     vecSize: usize = 2,
-    resolution: f32 = 3,
+    resolution: f32 = 1,
 
     pub fn new() Path {
         return Path{};
