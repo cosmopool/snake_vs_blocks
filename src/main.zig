@@ -167,7 +167,7 @@ fn drawSnake() !void {
         if (!Game.showBody) continue;
         if (remaningCircles <= 0) continue;
 
-        var bodyNodePos = prevNode;
+        var cursor = prevNode;
         var circleIdx = Snake.size - remaningCircles;
         var distance = prevNode.distance(lastPositionUsed);
 
@@ -184,19 +184,19 @@ fn drawSnake() !void {
                 if (distance >= Snake.minDiameter and distance <= Snake.maxDiameter) break;
                 if (distance > Snake.maxDiameter) break;
 
-                bodyNodePos = Vector.new(
+                cursor = Vector.new(
                     prevNode.x() + t * (currentNode.x() - prevNode.x()),
                     prevNode.y() + t * (currentNode.y() - prevNode.y()),
                 );
 
-                distance = bodyNodePos.distance(lastPositionUsed);
+                distance = cursor.distance(lastPositionUsed);
             }
 
-            if (lastPositionUsed.x() == bodyNodePos.x() and lastPositionUsed.y() == bodyNodePos.y()) break;
-            assert(lastPositionUsed.x() != bodyNodePos.x() or lastPositionUsed.y() != bodyNodePos.y());
+            if (lastPositionUsed.x() == cursor.x() and lastPositionUsed.y() == cursor.y()) break;
+            assert(lastPositionUsed.x() != cursor.x() or lastPositionUsed.y() != cursor.y());
 
-            drawBodyNodeAt(bodyNodePos.x(), bodyNodePos.y());
-            lastPositionUsed = bodyNodePos;
+            drawBodyNodeAt(cursor.x(), cursor.y());
+            lastPositionUsed = cursor;
             remaningCircles -= 1;
             d -= Snake.diameter;
             circleIdx = Snake.size - remaningCircles;
