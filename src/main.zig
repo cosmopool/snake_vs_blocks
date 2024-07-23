@@ -149,7 +149,7 @@ fn drawSnake() !void {
     drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
     // draw body
-    var lastPositionUsed = Vector.new(Path.positions[0], Path.positions[1]);
+    var lastCircle = Vector.new(Path.positions[0], Path.positions[1]);
     var remaningCircles: i16 = Snake.size;
     for (1..Path.len) |i| {
         const index = i * Path.vecSize;
@@ -169,11 +169,11 @@ fn drawSnake() !void {
 
         var cursor = prevNode;
         var circleIdx = Snake.size - remaningCircles;
-        var distance = prevNode.distance(lastPositionUsed);
+        var distance = prevNode.distance(lastCircle);
 
         // assert(prevNode.distance(lastPositionUsed) <= Snake.diameter + a);
         // assert(currentNode.distance(lastPositionUsed) >= Snake.diameter - a);
-        var d = currentNode.distance(lastPositionUsed);
+        var d = currentNode.distance(lastCircle);
         // add as many circles that fit in this node
         while (d >= Snake.maxDiameter and remaningCircles > 0) {
             var t: f32 = 0;
@@ -189,14 +189,14 @@ fn drawSnake() !void {
                     prevNode.y() + t * (currentNode.y() - prevNode.y()),
                 );
 
-                distance = cursor.distance(lastPositionUsed);
+                distance = cursor.distance(lastCircle);
             }
 
-            if (lastPositionUsed.x() == cursor.x() and lastPositionUsed.y() == cursor.y()) break;
-            assert(lastPositionUsed.x() != cursor.x() or lastPositionUsed.y() != cursor.y());
+            if (lastCircle.x() == cursor.x() and lastCircle.y() == cursor.y()) break;
+            assert(lastCircle.x() != cursor.x() or lastCircle.y() != cursor.y());
 
             drawBodyNodeAt(cursor.x(), cursor.y());
-            lastPositionUsed = cursor;
+            lastCircle = cursor;
             remaningCircles -= 1;
             d -= Snake.diameter;
             circleIdx = Snake.size - remaningCircles;
