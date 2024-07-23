@@ -160,22 +160,22 @@ fn drawSnake() !void {
         if (Path.positions[x] == Empty and Path.positions[y] == Empty) break;
         assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
-        const currentNode = Vector.new(Path.positions[x], Path.positions[y]);
-        const prevNode = Vector.new(Path.positions[x - Path.vecSize], Path.positions[y - Path.vecSize]);
+        const end = Vector.new(Path.positions[x], Path.positions[y]);
+        const start = Vector.new(Path.positions[x - Path.vecSize], Path.positions[y - Path.vecSize]);
 
-        if (Game.showPath) drawLineFrom(currentNode, prevNode);
+        if (Game.showPath) drawLineFrom(start, end);
         if (!Game.showBody) continue;
         if (remaningCircles <= 0) continue;
 
-        var cursor = prevNode;
+        var cursor = start;
         var circleIdx = Snake.size - remaningCircles;
-        var distance = prevNode.distance(lastCircle);
+        var distance = start.distance(lastCircle);
 
         // assert(prevNode.distance(lastPositionUsed) <= Snake.diameter + a);
         // assert(currentNode.distance(lastPositionUsed) >= Snake.diameter - a);
-        var d = currentNode.distance(lastCircle);
+
         // add as many circles that fit in this node
-        while (d >= Snake.maxDiameter and remaningCircles > 0) {
+        while (end.distance(lastCircle) >= Snake.minDiameter and remaningCircles > 0) {
             var t: f32 = 0;
             // if prevNode = A and currentNode = B; line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
             // find the "t" that generates a point in the line segment AB
@@ -185,8 +185,8 @@ fn drawSnake() !void {
                 if (distance > Snake.maxDiameter) break;
 
                 cursor = Vector.new(
-                    prevNode.x() + t * (currentNode.x() - prevNode.x()),
-                    prevNode.y() + t * (currentNode.y() - prevNode.y()),
+                    start.x() + t * (end.x() - start.x()),
+                    start.y() + t * (end.y() - start.y()),
                 );
 
                 distance = cursor.distance(lastCircle);
@@ -198,7 +198,6 @@ fn drawSnake() !void {
             drawBodyNodeAt(cursor.x(), cursor.y());
             lastCircle = cursor;
             remaningCircles -= 1;
-            d -= Snake.diameter;
             circleIdx = Snake.size - remaningCircles;
         }
     }
