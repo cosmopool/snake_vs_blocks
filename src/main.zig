@@ -1,71 +1,58 @@
 const std = @import("std");
-const Helper = @import("helper.zig");
 const print = std.debug.print;
 const assert = std.debug.assert;
 const ArrayList = std.ArrayList;
-
 const rl = @cImport({
     @cInclude("raylib.h");
 });
 
-const Vec2 = @import("vector.zig").Vector2;
-const Vector2 = @Vector(2, f32);
 const Vector = @import("vector.zig").Vector;
 
 const Empty = 0;
-
-const allocator = std.heap.page_allocator;
-
 const Color = rl.CLITERAL(rl.Color);
-
-var useMouse: bool = false;
-var paused: bool = false;
-var gameOver = false;
-const fps: f32 = 60;
-const screenWidth = 400;
-const screenHeight = 700;
-const centerX = @divTrunc(screenWidth, 2);
-const centerY = @divTrunc(screenHeight, 2);
-
-var snakeSize: i16 = 20;
-const circleRadius = 10;
-const circleDiameter = circleRadius * 2;
-const margin: f16 = 4;
-const speed: f32 = 200;
-const boardSpeed = 180;
-
-var lastPathNodeDirection: i8 = 0;
-
-const snakePathLen = 400;
-const snakePathVecSize = 2;
-var snakePath: [snakePathLen]f32 = undefined;
+const Screen = @import("entities.zig").Screen.new();
+var Game = @import("entities.zig").Game.new();
+var Snake = @import("entities.zig").Snake.new();
+var Path = @import("entities.zig").Path.new();
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
-    rl.InitWindow(screenWidth, screenHeight, "hello world!");
+    rl.InitWindow(Screen.width, Screen.height, "hello world!");
     defer rl.CloseWindow();
-    rl.SetTargetFPS(fps);
+    rl.SetTargetFPS(Screen.fps);
 
-    inline for (0..snakePathLen) |i| {
-        const index = i * snakePathVecSize;
-        if (index >= snakePathLen) break;
+    // populate Path.positions array
+    Path.positions[0] = Screen.centerX;
+    Path.positions[1] = Screen.centerY;
+    for (1..Path.len) |i| {
+        const index = i * Path.vecSize;
+        if (index >= Path.len) break;
         const x = 0 + index;
         const y = 1 + index;
-        snakePath[x] = Empty;
-        snakePath[y] = Empty;
+
+        if ((@as(f32, @floatFromInt(i)) * Snake.diameter) + (1.5 * Screen.centerY) < Screen.height) {
+            Path.positions[x] = Screen.centerX;
+            Path.positions[y] = @as(f32, @floatFromInt(i)) * Snake.diameter + Screen.centerY;
+        } else {
+            Path.positions[x] = Empty;
+            Path.positions[y] = Empty;
+        }
     }
-    snakePath[0] = centerX;
-    snakePath[1] = centerY;
+
+    // fix for first position
+    rl.SetMousePosition(Screen.centerX, Screen.centerX);
 
     while (!rl.WindowShouldClose()) {
-        if (rl.IsKeyPressed(rl.KEY_SPACE)) paused = !paused;
-        if (!paused and !gameOver) try update();
+        if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
+        if (rl.IsKeyPressed(rl.KEY_D)) Game.showPath = !Game.showPath;
+        if (rl.IsKeyPressed(rl.KEY_B)) Game.showBody = !Game.showBody;
+        if (!Game.paused and !Game.gameOver) try update();
         try draw();
     }
 }
 
 fn update() anyerror!void {
-    if (snakeSize <= 0) gameOver = true;
+    if (Snake.size <= 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
     updateSnakePathPosition(deltaTime);
@@ -75,74 +62,69 @@ fn update() anyerror!void {
 fn updateSnakePosition(deltaTime: f32) !void {
     _ = deltaTime; // autofix
     // limit mouse position to window boundaries
+    const radius: f32 = @floatFromInt(Snake.radius);
+    const screenWidthLimit: f32 = Screen.width - radius;
     const mouse = Vector.new(
-        std.math.clamp(rl.GetMousePosition().x, circleRadius, screenWidth - circleRadius),
-        centerY,
+        std.math.clamp(rl.GetMousePosition().x, radius, screenWidthLimit),
+        Screen.centerY,
     );
-    assert(mouse.x() >= 0 and mouse.x() <= screenWidth);
-    assert(mouse.y() >= 0 and mouse.y() <= screenHeight);
+    assert(mouse.x() >= 0 and mouse.x() <= Screen.width);
+    assert(mouse.y() >= 0 and mouse.y() <= Screen.height);
 
-    // calculate mouse relative distance from snake head
-    const mouseDiff = mouse.sub(Vector.new(snakePath[0], snakePath[1])).norm();
+    // last position in Path.path array
+    const lastPathPos = Vector.new(Path.positions[2], Path.positions[3]);
 
-    // calculate snake head direction vector
-    const diffDirection = mouseDiff.direction();
-
-    // if snake changed direction set a checkpoint in it's path
-    if (lastPathNodeDirection != diffDirection) {
+    // create a new node in Path.path
+    const distanceToLastPosition = mouse.distance(lastPathPos);
+    if (distanceToLastPosition >= Path.resolution) {
         addNodeInPath(mouse);
-        lastPathNodeDirection = diffDirection;
     }
 
     // update snake head position
-    snakePath[0] = mouse.x();
-    // snakeHead.x += currentDirection.x() * 3000 * deltaTime;
-    assert(snakePath[0] >= 0 and snakePath[0] <= screenWidth);
-}
-
-fn didChangeDirection(old: *const Vector, current: *const Vector) bool {
-    return old.direction() != current.direction();
+    Path.positions[0] = mouse.x();
+    assert(Path.positions[0] >= 0 and Path.positions[0] <= Screen.width);
 }
 
 fn updateSnakePathPosition(deltaTime: f32) void {
-    for (0..snakePathLen) |i| {
+    for (0..Path.len) |i| {
         if (i == 0) continue;
-        const index = i * snakePathVecSize;
-        if (index > snakePathLen) break;
+        const index = i * Path.vecSize;
+        if (index > Path.len) break;
         const x = 0 + index;
         const y = 1 + index;
 
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
-        if (snakePath[x] == Empty and snakePath[y] == Empty) break;
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) break;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
         // update checkpoint position
-        const newPositionY = snakePath[y] + (boardSpeed * deltaTime);
-        if (newPositionY > screenHeight + 100) {
-            snakePath[x] = Empty;
-            snakePath[y] = Empty;
+        const newPositionY = Path.positions[y] + (Game.boardSpeed * deltaTime);
+        if (newPositionY > Screen.height + 100) {
+            Path.positions[x] = Empty;
+            Path.positions[y] = Empty;
         } else {
-            snakePath[y] = newPositionY;
+            Path.positions[y] = newPositionY;
         }
     }
 }
 
 fn addNodeInPath(newNode: Vector) void {
-    var i: usize = snakePathLen / snakePathVecSize;
-    while (i > 1) : (i -= snakePathVecSize) {
-        if (i >= snakePathLen / snakePathVecSize) continue;
+    var i: usize = Path.len / Path.vecSize;
+    while (i > 1) : (i -= Path.vecSize) {
+        if (i >= Path.len / Path.vecSize) continue;
         const x = 0 + i;
         const y = 1 + i;
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
-        if (snakePath[x] == Empty and snakePath[y] == Empty) continue;
+
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) continue;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
         // shift values to the right
-        snakePath[x + 2] = snakePath[x];
-        snakePath[y + 2] = snakePath[y];
+        Path.positions[x + 2] = Path.positions[x];
+        Path.positions[y + 2] = Path.positions[y];
     }
 
     // add new checkpoint values
-    snakePath[2] = newNode.x();
-    snakePath[3] = newNode.y();
+    Path.positions[2] = newNode.x();
+    Path.positions[3] = newNode.y();
 }
 
 fn draw() anyerror!void {
@@ -152,126 +134,84 @@ fn draw() anyerror!void {
 
     try drawSnake();
 
-    if (gameOver) drawAtCenter("GAME OVER", 50, null);
-    if (paused) drawAtCenter("PAUSED", null, null);
+    if (Game.gameOver) drawAtCenter("GAME OVER", 50, null);
+    if (Game.paused) drawAtCenter("PAUSED", null, null);
 
     rl.DrawFPS(rl.GetScreenWidth() - 95, 10);
 }
 
 fn drawBodyNodeAt(x: f32, y: f32) void {
-    rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
-}
-
-fn drawCirclesBetween(start: *const Vector, end: *const Vector, remaningCircles: *i16) void {
-    const path = end.sub(start.*);
-    const distance = path.length();
-    const howManyFit = @ceil(distance / circleDiameter);
-    const circle = path.norm();
-
-    for (0..@intFromFloat(howManyFit)) |i| {
-        if (remaningCircles.* == 0) break;
-        const n: f32 = @floatFromInt(i);
-        const scale = circle.scale(circleDiameter * n);
-        const x = scale.x() + start.x();
-        const y = scale.y() + start.y();
-        if (y > screenHeight + 50) break;
-        rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), circleRadius, rl.RED);
-        remaningCircles.* -= 1;
-    }
-}
-
-fn getT(p0: Vector, p1: Vector, t: f32, alpha: f32) f32 {
-    const d = p1.sub(p0);
-    const a = d.data[0] * d.data[0] + d.data[1] * d.data[1];
-    const b = std.math.pow(f32, a, alpha * 0.5);
-    return b + t;
-}
-
-fn catmullRom(p0: Vector, p1: Vector, p2: Vector, p3: Vector, t: f32, alpha: f32) Vector {
-    // assert(t >= 0 and t <= 1);
-    assert(alpha >= 0 and alpha <= 1);
-
-    const t0: f32 = 0.0;
-    const t1 = getT(p0, p1, t0, alpha);
-    const t2 = getT(p1, p2, t1, alpha);
-    const t3 = getT(p2, p3, t2, alpha);
-    const tt = std.math.lerp(t1, t2, t);
-
-    if (0.0 == t1) {
-        return p1;
-    }
-
-    const A1 = Vector.splat((t1 - tt) / (t1 - t0)).mul(p0).add(Vector.splat((tt - t0) / (t1 - t0)).mul(p1));
-    const A2 = Vector.splat((t2 - tt) / (t2 - t1)).mul(p1).add(Vector.splat((tt - t1) / (t2 - t1)).mul(p2));
-    const A3 = Vector.splat((t3 - tt) / (t3 - t2)).mul(p2).add(Vector.splat((tt - t2) / (t3 - t2)).mul(p3));
-    const B1 = Vector.splat((t2 - tt) / (t2 - t0)).mul(A1).add(Vector.splat((tt - t0) / (t2 - t0)).mul(A2));
-    const B2 = Vector.splat((t3 - tt) / (t3 - t1)).mul(A2).add(Vector.splat((tt - t1) / (t3 - t1)).mul(A3));
-    const C = Vector.splat((t2 - tt) / (t2 - t1)).mul(B1).add(Vector.splat((tt - t1) / (t2 - t1)).mul(B2));
-
-    return C;
+    rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(Snake.radius), rl.RED);
 }
 
 fn drawSnake() !void {
     // draw head
-    drawBodyNodeAt(snakePath[0], snakePath[1]);
+    drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
-    // draw body
-    const remaningCircles: i16 = snakeSize;
-    _ = remaningCircles; // autofix
-    for (0..snakePathLen) |i| {
-        const index = i * snakePathVecSize;
-        if (index >= snakePathLen / snakePathVecSize) break;
+    // draw circles between path nodes
+    var lastCircle = Vector.new(Path.positions[0], Path.positions[1]);
+    var remaningCircles: i16 = Snake.size;
+    for (1..Path.len) |i| {
+        const index = i * Path.vecSize;
+        if (index >= Path.len / Path.vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
 
-        assert((snakePath[x] != Empty and snakePath[y] != Empty) or (snakePath[x] == Empty and snakePath[y] == Empty));
-        if (snakePath[x] == Empty and snakePath[y] == Empty) break;
+        // the path beyond this point is all empty, no need to check
+        if (Path.positions[x] == Empty and Path.positions[y] == Empty) break;
+        assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
-        const currentNode = Vector.new(snakePath[x], snakePath[y]);
-        var prevNode: Vector = undefined;
-        if (i == 0) {
-            prevNode = Vector.new(snakePath[0], snakePath[1] - 50);
-        } else {
-            prevNode = Vector.new(snakePath[x - snakePathVecSize], snakePath[y - snakePathVecSize]);
-        }
+        const end = Vector.new(Path.positions[x], Path.positions[y]);
+        const start = Vector.new(Path.positions[x - Path.vecSize], Path.positions[y - Path.vecSize]);
 
-        // drawCirclesBetween(&prevNode, &currentNode, &remaningCircles);
+        if (Game.showPath) drawLineFrom(start, end);
+        if (!Game.showBody) continue;
+        if (remaningCircles <= 0) continue;
 
-        // rl.DrawLine(
-        //     @intFromFloat(prevNode.x()),
-        //     @intFromFloat(prevNode.y()),
-        //     @intFromFloat(currentNode.x()),
-        //     @intFromFloat(currentNode.y()),
-        //     rl.BLUE,
-        // );
+        assert(start.distance(lastCircle) <= Snake.minDiameter);
 
-        const p0 = prevNode;
-        const p1 = currentNode;
-        const p2 = Vector.new(snakePath[x + snakePathVecSize], snakePath[y + snakePathVecSize]);
-        const p3 = Vector.new(snakePath[x + (snakePathVecSize * 2)], snakePath[y + (snakePathVecSize * 2)]);
-        rl.DrawCircle(@intFromFloat(p0.x()), @intFromFloat(p0.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p1.x()), @intFromFloat(p1.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p2.x()), @intFromFloat(p2.y()), 5, rl.GREEN);
-        rl.DrawCircle(@intFromFloat(p3.x()), @intFromFloat(p3.y()), 5, rl.GREEN);
-
+        var cursor = start;
+        var circleIdx = Snake.size - remaningCircles;
         var t: f32 = 0;
-        while (t <= 1.0) : (t += 0.01) {
-            const cat = catmullRom(p0, p1, p2, p3, t, 0.7);
-            const cx = cat.x();
-            const cy = cat.y();
-            if (std.math.isNan(cx) or std.math.isNan(cy)) break;
-            rl.DrawCircle(@intFromFloat(cx), @intFromFloat(cy), 1, rl.YELLOW);
+        // add as many circles that fit in this node
+        while (end.distance(lastCircle) >= Snake.minDiameter and remaningCircles > 0) {
+            // using the line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
+            // to find a valid point for a new circle
+            while (t <= 1) : (t += Path.step) {
+                const distance = cursor.distance(lastCircle);
+                if (distance >= Snake.minDiameter and distance <= Snake.maxDiameter) break;
+                if (distance > Snake.maxDiameter) break;
+
+                cursor = Vector.new(
+                    start.x() + t * (end.x() - start.x()),
+                    start.y() + t * (end.y() - start.y()),
+                );
+            }
+
+            if (lastCircle.x() == cursor.x() and lastCircle.y() == cursor.y()) break;
+            assert(lastCircle.x() != cursor.x() or lastCircle.y() != cursor.y());
+
+            drawBodyNodeAt(cursor.x(), cursor.y());
+            lastCircle = cursor;
+            remaningCircles -= 1;
+            circleIdx = Snake.size - remaningCircles;
         }
     }
 }
 
-fn isEmpty(x: f32, y: f32) bool {
-    return x == Empty and y == Empty;
+fn drawLineFrom(start: Vector, end: Vector) void {
+    return rl.DrawLine(
+        @intFromFloat(start.x()),
+        @intFromFloat(start.y()),
+        @intFromFloat(end.x()),
+        @intFromFloat(end.y()),
+        rl.BLUE,
+    );
 }
 
 fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
     const fontSize = size orelse 30;
     const textSize = rl.MeasureText(text, @intCast(fontSize));
-    const x = @divTrunc(screenWidth, 2) - @divTrunc(textSize, 2);
-    rl.DrawText(text, @intCast(x), @intFromFloat(screenHeight / 2), @intCast(fontSize), color orelse rl.WHITE);
+    const x = @divTrunc(Screen.width, 2) - @divTrunc(textSize, 2);
+    rl.DrawText(text, @intCast(x), Screen.centerY, @intCast(fontSize), color orelse rl.WHITE);
 }
