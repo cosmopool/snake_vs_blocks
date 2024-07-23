@@ -31,7 +31,6 @@ pub fn main() !void {
         const y = 1 + index;
 
         if ((@as(f32, @floatFromInt(i)) * Snake.diameter) + (1.5 * Screen.centerY) < Screen.height) {
-            std.debug.print("{d}\n", .{i});
             Path.positions[x] = Screen.centerX;
             Path.positions[y] = @as(f32, @floatFromInt(i)) * Snake.diameter + Screen.centerY;
         } else {
