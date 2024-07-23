@@ -177,7 +177,7 @@ fn drawSnake() !void {
         while (end.distance(lastCircle) >= Snake.minDiameter and remaningCircles > 0) {
             // using the line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
             // to find a valid point for a new circle
-            while (t <= 1) : (t += 0.05) {
+            while (t <= 1) : (t += Path.step) {
                 const distance = cursor.distance(lastCircle);
                 if (distance >= Snake.minDiameter and distance <= Snake.maxDiameter) break;
                 if (distance > Snake.maxDiameter) break;
