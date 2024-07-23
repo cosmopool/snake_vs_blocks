@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylibSdk = @import("raylib");
+// const raylibSdk = @import("raylib");
 
 pub fn build(b: *std.Build) void {
     // Standard target options allows the person running `zig build` to choose
@@ -20,16 +20,17 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // const raylib_dependency = b.dependency("raylibSdk", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // const raylib_module = raylib_dependency.module("raylibSdk");
-    // exe.root_module.addImport("raylib", raylib_module);
+    const raylib_optimize = b.option(
+        std.builtin.OptimizeMode,
+        "raylib-optimize",
+        "Prioritize performance, safety, or binary size (-O flag), defaults to value of optimize option",
+    ) orelse optimize;
 
-    const raylib = try raylibSdk.addRaylib(b, target, optimize, .{});
-    exe.addIncludePath(.{ .src_path = .{ .owner = b, .sub_path = "raylib/src" } });
-    exe.linkLibrary(raylib);
+    const raylib_dep = b.dependency("raylib", .{
+        .target = target,
+        .optimize = raylib_optimize,
+    });
+    exe.linkLibrary(raylib_dep.artifact("raylib"));
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
