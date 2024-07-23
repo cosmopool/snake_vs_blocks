@@ -138,7 +138,7 @@ fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
-    const a = 0.5;
+    const a = 1;
     // draw body
     var lastPositionUsed = Vector.new(Path.positions[0], Path.positions[1]);
     var remaningCircles: i16 = Snake.size;
@@ -157,35 +157,41 @@ fn drawSnake() !void {
         if (Game.showPath) drawLineFrom(currentNode, prevNode);
         if (!Game.showBody) continue;
         if (remaningCircles <= 0) continue;
-        if (currentNode.distance(lastPositionUsed) < Snake.diameter + a) continue;
 
-        var centerBodyPos = prevNode;
-        var distance = centerBodyPos.distance(lastPositionUsed);
-        var lastDistance: f32 = 0;
-        while (distance < Snake.diameter - a or distance > Snake.diameter + a) {
-            if (distance < Snake.diameter - a) {}
-            if (lastDistance == distance) break;
-            if (distance < Snake.diameter - a) {
-                centerBodyPos = Vector.new(
-                    (centerBodyPos.x() + currentNode.x()) / 2,
-                    (centerBodyPos.y() + currentNode.y()) / 2,
+        var bodyNodePos = prevNode;
+        var circleIdx = Snake.size - remaningCircles;
+        var distance = prevNode.distance(lastPositionUsed);
+
+        // assert(prevNode.distance(lastPositionUsed) <= Snake.diameter + a);
+        // assert(currentNode.distance(lastPositionUsed) >= Snake.diameter - a);
+        var d = currentNode.distance(lastPositionUsed);
+        // add as many circles that fit in this node
+        while (d >= Snake.diameter and remaningCircles > 0) {
+            var t: f32 = 0;
+            // if prevNode = A and currentNode = B; line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
+            // find the "t" that generates a point in the line segment AB
+            // that it's distance to the previous body circle equals the circle diameter
+            while (t <= 1) : (t += 0.05) {
+                if (distance >= Snake.diameter - a and distance <= Snake.diameter + a) break;
+                if (distance > Snake.diameter + a) break;
+
+                bodyNodePos = Vector.new(
+                    prevNode.x() + t * (currentNode.x() - prevNode.x()),
+                    prevNode.y() + t * (currentNode.y() - prevNode.y()),
                 );
-                if (centerBodyPos.distance(lastPositionUsed) >= distance) break;
-            } else {
-                centerBodyPos = Vector.new(
-                    (centerBodyPos.x() + prevNode.x()) / 2,
-                    (centerBodyPos.y() + prevNode.y()) / 2,
-                );
-                if (centerBodyPos.distance(lastPositionUsed) <= distance) break;
+
+                distance = bodyNodePos.distance(lastPositionUsed);
             }
 
-            lastDistance = distance;
-            distance = centerBodyPos.distance(lastPositionUsed);
-        }
+            if (lastPositionUsed.x() == bodyNodePos.x() and lastPositionUsed.y() == bodyNodePos.y()) break;
+            assert(lastPositionUsed.x() != bodyNodePos.x() or lastPositionUsed.y() != bodyNodePos.y());
 
-        drawBodyNodeAt(centerBodyPos.x(), centerBodyPos.y());
-        lastPositionUsed = centerBodyPos;
-        remaningCircles -= 1;
+            drawBodyNodeAt(bodyNodePos.x(), bodyNodePos.y());
+            lastPositionUsed = bodyNodePos;
+            remaningCircles -= 1;
+            d -= Snake.diameter;
+            circleIdx = Snake.size - remaningCircles;
+        }
     }
 }
 
