@@ -148,7 +148,6 @@ fn drawSnake() !void {
     // draw head
     drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
-    const a = 1;
     // draw body
     var lastPositionUsed = Vector.new(Path.positions[0], Path.positions[1]);
     var remaningCircles: i16 = Snake.size;
@@ -176,14 +175,14 @@ fn drawSnake() !void {
         // assert(currentNode.distance(lastPositionUsed) >= Snake.diameter - a);
         var d = currentNode.distance(lastPositionUsed);
         // add as many circles that fit in this node
-        while (d >= Snake.diameter and remaningCircles > 0) {
+        while (d >= Snake.maxDiameter and remaningCircles > 0) {
             var t: f32 = 0;
             // if prevNode = A and currentNode = B; line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
             // find the "t" that generates a point in the line segment AB
             // that it's distance to the previous body circle equals the circle diameter
             while (t <= 1) : (t += 0.05) {
-                if (distance >= Snake.diameter - a and distance <= Snake.diameter + a) break;
-                if (distance > Snake.diameter + a) break;
+                if (distance >= Snake.minDiameter and distance <= Snake.maxDiameter) break;
+                if (distance > Snake.maxDiameter) break;
 
                 bodyNodePos = Vector.new(
                     prevNode.x() + t * (currentNode.x() - prevNode.x()),

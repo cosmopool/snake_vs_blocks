@@ -31,10 +31,14 @@ pub const Screen = struct {
 
 pub const Snake = struct {
     const _radius: i8 = 10;
+    const _diameter: f32 = _radius * 2;
+    const _tolerance: f32 = 1;
 
     size: i16 = 5,
     radius: i8 = _radius,
-    diameter: f32 = _radius * 2,
+    diameter: f32 = _diameter,
+    minDiameter: f32 = _diameter - _tolerance,
+    maxDiameter: f32 = _diameter + _tolerance,
 
     pub fn new() Snake {
         return Snake{};
