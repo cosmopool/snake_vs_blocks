@@ -21,16 +21,27 @@ pub fn main() !void {
     defer rl.CloseWindow();
     rl.SetTargetFPS(Screen.fps);
 
-    for (0..Path.len) |i| {
+    // populate Path.positions array
+    Path.positions[0] = Screen.centerX;
+    Path.positions[1] = Screen.centerY;
+    for (1..Path.len) |i| {
         const index = i * Path.vecSize;
         if (index >= Path.len) break;
         const x = 0 + index;
         const y = 1 + index;
-        Path.positions[x] = Empty;
-        Path.positions[y] = Empty;
+
+        if ((@as(f32, @floatFromInt(i)) * Snake.diameter) + (1.5 * Screen.centerY) < Screen.height) {
+            std.debug.print("{d}\n", .{i});
+            Path.positions[x] = Screen.centerX;
+            Path.positions[y] = @as(f32, @floatFromInt(i)) * Snake.diameter + Screen.centerY;
+        } else {
+            Path.positions[x] = Empty;
+            Path.positions[y] = Empty;
+        }
     }
-    Path.positions[0] = Screen.centerX;
-    Path.positions[1] = Screen.centerY;
+
+    // fix for first position
+    rl.SetMousePosition(Screen.centerX, Screen.centerX);
 
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
