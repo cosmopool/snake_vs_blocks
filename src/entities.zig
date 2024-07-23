@@ -53,6 +53,7 @@ pub const Path = struct {
     len: usize = _len,
     vecSize: usize = 2,
     resolution: f32 = 1,
+    step: f32 = 0.01,
 
     pub fn new() Path {
         return Path{};
