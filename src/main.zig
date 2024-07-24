@@ -120,6 +120,10 @@ fn updateSnakePathPosition(deltaTime: f32) void {
     }
 }
 
+/// Add the given [position] as the first node in [Path.positions].
+///
+/// Start by shifting all positions to the right (discard the last if not empty)
+/// and finishes adding [position] "x" and "y" at index "0" and "1".
 fn addPositionInPath(position: Vector) void {
     var i: usize = Path.len / Path.vecSize;
     while (i > 1) : (i -= Path.vecSize) {
@@ -135,7 +139,7 @@ fn addPositionInPath(position: Vector) void {
         Path.positions[y + 2] = Path.positions[y];
     }
 
-    // add new checkpoint values
+    // add new position values
     Path.positions[2] = position.x();
     Path.positions[3] = position.y();
 }
@@ -186,10 +190,10 @@ fn drawSnake() !void {
         var cursor = start;
         var circleIdx = Snake.size - remaningCircles;
         var t: f32 = 0;
-        // add as many circles that fit in this node
+        // add as many circles that fit in this line segment
         while (end.distance(lastCircle) >= Snake.minDiameter and remaningCircles > 0) {
             // using the line equation = (x, y) = (x1, y1) + t * ((x2, y2) - (x1, y1))
-            // to find a valid point for a new circle
+            // to find a valid point for a new circle incrementing "t" by Path.step
             while (t <= 1) : (t += Path.step) {
                 const distance = cursor.distance(lastCircle);
                 if (distance >= Snake.minDiameter and distance <= Snake.maxDiameter) break;
