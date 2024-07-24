@@ -84,7 +84,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
     const prevPathNode = Vector.new(Path.positions[1], Path.positions[2]);
     const distanceToLastPosition = newPosition.distance(prevPathNode);
     if (distanceToLastPosition >= Path.resolution) {
-        addNodeInPath(newPosition);
+        addPositionInPath(newPosition);
     }
 
     // update snake head position
@@ -113,7 +113,7 @@ fn updateSnakePathPosition(deltaTime: f32) void {
     }
 }
 
-fn addNodeInPath(newNode: Vector) void {
+fn addPositionInPath(position: Vector) void {
     var i: usize = Path.len / Path.vecSize;
     while (i > 1) : (i -= Path.vecSize) {
         if (i >= Path.len / Path.vecSize) continue;
@@ -129,8 +129,8 @@ fn addNodeInPath(newNode: Vector) void {
     }
 
     // add new checkpoint values
-    Path.positions[2] = newNode.x();
-    Path.positions[3] = newNode.y();
+    Path.positions[2] = position.x();
+    Path.positions[3] = position.y();
 }
 
 fn draw() anyerror!void {
