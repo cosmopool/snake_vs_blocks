@@ -77,6 +77,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
         std.math.lerp(lastPosition.x(), mouseX, deltaTime * 10),
         Screen.centerY,
     );
+    assert(newPosition.x() >= 0 and newPosition.x() <= Screen.width);
 
     // create a new node in Path if newPosition is in a valid distance from
     // previous node position in Path
@@ -88,7 +89,6 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // update snake head position
     Path.positions[0] = newPosition.x();
-    assert(Path.positions[0] >= 0 and Path.positions[0] <= Screen.width);
 }
 
 fn updateSnakePathPosition(deltaTime: f32) void {
