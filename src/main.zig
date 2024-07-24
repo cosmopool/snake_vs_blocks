@@ -91,6 +91,13 @@ fn updateSnakePosition(deltaTime: f32) !void {
     Path.positions[0] = newPosition.x();
 }
 
+/// Moves the snake's path downward by the current [Game.boardSpeed].
+///
+/// Increments the y-coordinate of each position in [Path.positions]
+/// by [Game.boardSpeed].
+///
+/// The first position in Path represents the snake's head and is managed by
+/// the [updateSnakePosition] function.
 fn updateSnakePathPosition(deltaTime: f32) void {
     for (0..Path.len) |i| {
         if (i == 0) continue;
