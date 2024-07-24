@@ -7,6 +7,7 @@ const rl = @cImport({
 });
 
 const Vector = @import("vector.zig").Vector;
+const Utils = @import("helper.zig");
 
 const Empty = 0;
 const Color = rl.CLITERAL(rl.Color);
@@ -60,28 +61,33 @@ fn update() anyerror!void {
 }
 
 fn updateSnakePosition(deltaTime: f32) !void {
-    _ = deltaTime; // autofix
+    // current head position
+    const lastPosition = Vector.new(Path.positions[0], Path.positions[1]);
+
     // limit mouse position to window boundaries
     const radius: f32 = @floatFromInt(Snake.radius);
     const screenWidthLimit: f32 = Screen.width - radius;
-    const mouse = Vector.new(
-        std.math.clamp(rl.GetMousePosition().x, radius, screenWidthLimit),
+
+    // get mouse X position
+    const mouseX = std.math.clamp(rl.GetMousePosition().x, radius, screenWidthLimit);
+    assert(mouseX >= 0 and mouseX <= Screen.width);
+
+    // calculate new position
+    const newPosition = Vector.new(
+        std.math.lerp(lastPosition.x(), mouseX, deltaTime * 10),
         Screen.centerY,
     );
-    assert(mouse.x() >= 0 and mouse.x() <= Screen.width);
-    assert(mouse.y() >= 0 and mouse.y() <= Screen.height);
 
-    // last position in Path.path array
-    const lastPathPos = Vector.new(Path.positions[2], Path.positions[3]);
-
-    // create a new node in Path.path
-    const distanceToLastPosition = mouse.distance(lastPathPos);
+    // create a new node in Path if newPosition is in a valid distance from
+    // previous node position in Path
+    const prevPathNode = Vector.new(Path.positions[1], Path.positions[2]);
+    const distanceToLastPosition = newPosition.distance(prevPathNode);
     if (distanceToLastPosition >= Path.resolution) {
-        addNodeInPath(mouse);
+        addNodeInPath(newPosition);
     }
 
     // update snake head position
-    Path.positions[0] = mouse.x();
+    Path.positions[0] = newPosition.x();
     assert(Path.positions[0] >= 0 and Path.positions[0] <= Screen.width);
 }
 
