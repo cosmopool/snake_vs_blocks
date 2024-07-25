@@ -1,3 +1,5 @@
+pub const Empty = -1.11;
+
 pub const Game = struct {
     useMouse: bool = true,
     paused: bool = false,

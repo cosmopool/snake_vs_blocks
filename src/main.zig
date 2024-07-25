@@ -9,7 +9,7 @@ const rl = @cImport({
 const Vector = @import("vector.zig").Vector;
 const Utils = @import("helper.zig");
 
-const Empty = -1;
+const Empty = @import("entities.zig").Empty;
 const Color = rl.CLITERAL(rl.Color);
 const Screen = @import("entities.zig").Screen.new();
 var Game = @import("entities.zig").Game.new();
