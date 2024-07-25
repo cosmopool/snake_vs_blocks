@@ -2,6 +2,7 @@ const std = @import("std");
 
 const Vector = @import("vector.zig").Vector;
 var Snake = @import("entities.zig").Snake.new();
+const Empty = @import("entities.zig").Empty;
 
 pub fn limitVel(vel: f32, limit: f32) f32 {
     if (vel < 0) {
@@ -66,4 +67,33 @@ pub fn checkCollisionWithBox(circle: Vector, box: Vector, boxSize: f32) bool {
     // If the distance is less than the circle's radius, an intersection occurs
     const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
     return distanceSquared < (radius * radius);
+}
+
+/// Delete the element at [elementIndex] by shifting values past this point.
+pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !void {
+    const vecSize = 3;
+
+    for (elementIndex..len - 1) |i| {
+        const index = i * vecSize;
+        if (index > len - vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const z = 2 + index;
+
+        // check if this block and the next is empty
+        if (array[x] == Empty and array[y] == Empty and
+            array[x + vecSize] == Empty and array[y + vecSize] == Empty) break;
+        std.debug.assert(array[x] != Empty and array[y] != Empty);
+
+        array[x] = array[x + vecSize];
+        array[y] = array[y + vecSize];
+        array[z] = array[z + vecSize];
+
+        // is this the last element?
+        if (i < len - vecSize - 1) continue;
+
+        array[x] = Empty;
+        array[y] = Empty;
+        array[z] = Empty;
+    }
 }
