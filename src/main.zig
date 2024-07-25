@@ -131,6 +131,36 @@ fn updateSnakePosition(deltaTime: f32) !void {
     );
     assert(newPosition.x() >= 0 and newPosition.x() <= Screen.width);
 
+    // check if is coliding
+    var isColliding: bool = false;
+    var blockIndex: usize = 0;
+    // while (!isColliding) : (i += 1) {
+    for (0..Board.len) |i| {
+        blockIndex = i;
+        const index = i * Board.vecSize;
+        if (index >= Board.len - Board.vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const block = Vector.new(Board.blocks[x], Board.blocks[y]);
+        if (block.x() == Empty and block.y() == Empty) break;
+
+        isColliding = Utils.checkCollisionWithBox(newPosition, block, Screen.cellSize);
+        if (isColliding) break;
+    }
+
+    if (isColliding) {
+        Board.boardSpeed = 0;
+
+        const points = 2 + (blockIndex * Board.vecSize);
+        print("{d}, {d}\n", .{ blockIndex, points });
+        if (Board.blocks[points] > 0) {
+            Snake.size -= 1;
+            Board.blocks[points] -= 1;
+        }
+    } else {
+        Board.boardSpeed = 180;
+    }
+
     // create a new node in Path if newPosition is in a valid distance from
     // previous node position in Path
     const prevPathNode = Vector.new(Path.positions[1], Path.positions[2]);
