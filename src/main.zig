@@ -9,12 +9,13 @@ const rl = @cImport({
 const Vector = @import("vector.zig").Vector;
 const Utils = @import("helper.zig");
 
-const Empty = 0;
+const Empty = -1;
 const Color = rl.CLITERAL(rl.Color);
 const Screen = @import("entities.zig").Screen.new();
 var Game = @import("entities.zig").Game.new();
 var Snake = @import("entities.zig").Snake.new();
 var Path = @import("entities.zig").Path.new();
+var Board = @import("entities.zig").Board.new();
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
@@ -40,6 +41,22 @@ pub fn main() !void {
         }
     }
 
+    for (0..Board.len) |i| {
+        const index = i * Board.vecSize;
+        if (index >= Board.len - Board.vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const points = 2 + index;
+
+        Board.blocks[x] = Empty;
+        Board.blocks[y] = Empty;
+        Board.blocks[points] = Empty;
+    }
+
+    Board.blocks[0] = Screen.centerX;
+    Board.blocks[1] = 0;
+    Board.blocks[2] = 15;
+
     // fix for first position
     rl.SetMousePosition(Screen.centerX, Screen.centerX);
 
@@ -56,9 +73,59 @@ fn update() anyerror!void {
     if (Snake.size <= 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
+    // try updatePositionOf(&Path.positions, Path.len, Path.vecSize, 1, deltaTime);
+    // try updatePositionOf(&Board.blocks, Board.len, Board.vecSize, 0, deltaTime);
+    try updateBlocksPosition(deltaTime);
     updateSnakePathPosition(deltaTime);
     try updateSnakePosition(deltaTime);
 }
+
+fn updateBlocksPosition(deltaTime: f32) !void {
+    for (0..Board.len) |i| {
+        const index = i * Board.vecSize;
+        if (index > Board.len - Board.vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const position = 2 + index;
+
+        if (Board.blocks[x] == Empty and Board.blocks[y] == Empty) break;
+        assert(Board.blocks[x] != Empty and Board.blocks[y] != Empty);
+
+        // update element position
+        const newPositionY = Board.blocks[y] + (Game.boardSpeed * deltaTime);
+        // remove element if not visible anymore
+        if (newPositionY > Screen.height + 100) {
+            Board.blocks[x] = Empty;
+            Board.blocks[y] = Empty;
+            Board.blocks[position] = Empty;
+        } else {
+            Board.blocks[y] = newPositionY;
+        }
+    }
+}
+
+// fn updatePositionOf(elements: *[1000]f32, len: usize, vecSize: usize, start: usize, deltaTime: f32) !void {
+//     for (start..len) |i| {
+//         if (i == 0) continue;
+//         const index = i * vecSize;
+//         if (index > len) break;
+//         const x = 0 + index;
+//         const y = 1 + index;
+//
+//         if (elements[x] == Empty and elements[y] == Empty) break;
+//         assert(elements[x] != Empty and elements[y] != Empty);
+//
+//         // update element position
+//         const newPositionY = elements[y] + (Game.boardSpeed * deltaTime);
+//         // remove element if not visible anymore
+//         if (newPositionY > Screen.height + 100) {
+//             elements[x] = Empty;
+//             elements[y] = Empty;
+//         } else {
+//             elements[y] = newPositionY;
+//         }
+//     }
+// }
 
 fn updateSnakePosition(deltaTime: f32) !void {
     // current head position
@@ -149,6 +216,7 @@ fn draw() anyerror!void {
     defer rl.EndDrawing();
     rl.ClearBackground(rl.BLACK);
 
+    try drawBlocks();
     try drawSnake();
 
     if (Game.gameOver) drawAtCenter("GAME OVER", 50, null);
@@ -231,4 +299,36 @@ fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
     const textSize = rl.MeasureText(text, @intCast(fontSize));
     const x = @divTrunc(Screen.width, 2) - @divTrunc(textSize, 2);
     rl.DrawText(text, @intCast(x), Screen.centerY, @intCast(fontSize), color orelse rl.WHITE);
+}
+
+fn drawBlocks() !void {
+    for (0..Board.len) |i| {
+        const index = i * Board.vecSize;
+        if (index >= Board.len / Board.vecSize) break;
+
+        const x = Board.blocks[0 + index];
+        const y = Board.blocks[1 + index];
+        const points = Board.blocks[2 + index];
+
+        // the path beyond this point is all empty, no need to check
+        if (x == Empty and y == Empty and points == Empty) break;
+        assert(x != Empty and y != Empty and points != Empty);
+
+        const rec: rl.Rectangle = .{
+            .x = x,
+            .y = y,
+            .width = Screen.cellSize,
+            .height = Screen.cellSize,
+        };
+        rl.DrawRectangleRounded(rec, 0.2, 0, rl.BLUE);
+
+        var pointsText: [@sizeOf(u16)]u8 = undefined;
+        _ = try std.fmt.bufPrint(&pointsText, "{d:0.0}", .{points});
+
+        const fontSize = 20;
+        const textSize = rl.MeasureText(&pointsText, @intCast(fontSize));
+        const textX = x + (Screen.cellSize / 2) - @as(f32, @floatFromInt(@divTrunc(textSize, 2)));
+        const textY = y + (Screen.cellSize / 2) - (fontSize / 2);
+        rl.DrawText(&pointsText, @intFromFloat(textX), @intFromFloat(textY), @intCast(fontSize), rl.WHITE);
+    }
 }

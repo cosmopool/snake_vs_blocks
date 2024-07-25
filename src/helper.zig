@@ -1,4 +1,8 @@
 const std = @import("std");
+
+const Vector = @import("vector.zig").Vector;
+var Snake = @import("entities.zig").Snake.new();
+
 pub fn limitVel(vel: f32, limit: f32) f32 {
     if (vel < 0) {
         return if (vel < -limit) -limit else vel;
@@ -40,4 +44,26 @@ pub fn checkCollision(x1: f32, y1: f32, x2: f32, y2: f32, size: f32) bool {
     const distance = std.math.sqrt(dx * dx + dy * dy);
     if (distance <= (size + size)) return true;
     return false;
+}
+
+pub fn checkCollisionWithBox(circle: Vector, box: Vector, boxSize: f32) bool {
+    const radius: f32 = @floatFromInt(Snake.radius);
+
+    // clamp(value, min, max) - limits value to the range min..max
+    const boxLeft = box.x();
+    const boxRight = boxLeft + boxSize;
+    const boxTop = box.y();
+    const boxBottom = box.y() + boxSize;
+
+    // Find the closest point to the circle within the rectangle
+    const closestX = std.math.clamp(circle.x(), boxLeft, boxRight);
+    const closestY = std.math.clamp(circle.y(), boxTop, boxBottom);
+
+    // Calculate the distance between the circle's center and this closest point
+    const distanceX = circle.x() - closestX;
+    const distanceY = circle.y() - closestY;
+
+    // If the distance is less than the circle's radius, an intersection occurs
+    const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+    return distanceSquared < (radius * radius);
 }
