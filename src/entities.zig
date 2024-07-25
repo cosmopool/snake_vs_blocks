@@ -1,4 +1,7 @@
+const std = @import("std");
+
 pub const Empty = -1.11;
+const Utils = @import("helper.zig");
 
 pub const Game = struct {
     useMouse: bool = true,
@@ -6,7 +9,6 @@ pub const Game = struct {
     gameOver: bool = false,
     showPath: bool = false,
     showBody: bool = true,
-    boardSpeed: f32 = 180,
 
     pub fn new() Game {
         return Game{};
@@ -38,7 +40,7 @@ pub const Snake = struct {
     const _diameter: f32 = _radius * 2;
     const _tolerance: f32 = 0.025;
 
-    size: i16 = 5,
+    size: i16 = 15,
     radius: i8 = _radius,
     diameter: f32 = _diameter,
     minDiameter: f32 = _diameter - _tolerance,
@@ -77,13 +79,10 @@ pub const Path = struct {
 
 pub const Board = struct {
     const _len: usize = 1000;
+    pub const fullSpeed: f32 = 180;
 
     /// Store blocks as (x, y, points) vector
     blocks: [_len]f32 = undefined,
-    /// Store food as (x, y, points) vector
-    foods: [_len]f32 = undefined,
-    /// Store food as (x, y, length) vector
-    walls: [_len]f32 = undefined,
     /// [Board.cells] length
     len: usize = _len,
     /// The number of elements in the vectorized data array [Board.cells].
@@ -93,8 +92,13 @@ pub const Board = struct {
     ///
     /// **Note:** DO NOT MUTATE this variable to avoid undefined behavior.
     vecSize: usize = 3,
+    boardSpeed: f32 = fullSpeed,
 
     pub fn new() Board {
         return Board{};
+    }
+
+    pub fn deleteBlock(self: *Board, blockIndex: usize) !void {
+        return try Utils.deleteVecSize3Element(blockIndex, &self.blocks, self.len);
     }
 };

@@ -53,9 +53,21 @@ pub fn main() !void {
         Board.blocks[points] = Empty;
     }
 
-    Board.blocks[0] = Screen.centerX;
+    Board.blocks[0] = 0 * Screen.cellSize;
     Board.blocks[1] = 0;
-    Board.blocks[2] = 15;
+    Board.blocks[2] = 5;
+
+    Board.blocks[3] = 1 * Screen.cellSize;
+    Board.blocks[4] = 0;
+    Board.blocks[5] = 3;
+
+    Board.blocks[6] = 2 * Screen.cellSize;
+    Board.blocks[7] = 0;
+    Board.blocks[8] = 4;
+
+    Board.blocks[9] = 3 * Screen.cellSize;
+    Board.blocks[10] = 0;
+    Board.blocks[11] = 6;
 
     // fix for first position
     rl.SetMousePosition(Screen.centerX, Screen.centerX);
@@ -73,8 +85,6 @@ fn update() anyerror!void {
     if (Snake.size <= 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
-    // try updatePositionOf(&Path.positions, Path.len, Path.vecSize, 1, deltaTime);
-    // try updatePositionOf(&Board.blocks, Board.len, Board.vecSize, 0, deltaTime);
     try updateBlocksPosition(deltaTime);
     updateSnakePathPosition(deltaTime);
     try updateSnakePosition(deltaTime);
@@ -86,46 +96,21 @@ fn updateBlocksPosition(deltaTime: f32) !void {
         if (index > Board.len - Board.vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
-        const position = 2 + index;
+        const points = 2 + index;
 
         if (Board.blocks[x] == Empty and Board.blocks[y] == Empty) break;
         assert(Board.blocks[x] != Empty and Board.blocks[y] != Empty);
 
         // update element position
-        const newPositionY = Board.blocks[y] + (Game.boardSpeed * deltaTime);
-        // remove element if not visible anymore
-        if (newPositionY > Screen.height + 100) {
-            Board.blocks[x] = Empty;
-            Board.blocks[y] = Empty;
-            Board.blocks[position] = Empty;
+        const newPositionY = Board.blocks[y] + (Board.boardSpeed * deltaTime);
+        // remove element if not visible anymore or has 0 points
+        if (newPositionY > Screen.height + 100 or Board.blocks[points] <= 0) {
+            try Board.deleteBlock(i);
         } else {
             Board.blocks[y] = newPositionY;
         }
     }
 }
-
-// fn updatePositionOf(elements: *[1000]f32, len: usize, vecSize: usize, start: usize, deltaTime: f32) !void {
-//     for (start..len) |i| {
-//         if (i == 0) continue;
-//         const index = i * vecSize;
-//         if (index > len) break;
-//         const x = 0 + index;
-//         const y = 1 + index;
-//
-//         if (elements[x] == Empty and elements[y] == Empty) break;
-//         assert(elements[x] != Empty and elements[y] != Empty);
-//
-//         // update element position
-//         const newPositionY = elements[y] + (Game.boardSpeed * deltaTime);
-//         // remove element if not visible anymore
-//         if (newPositionY > Screen.height + 100) {
-//             elements[x] = Empty;
-//             elements[y] = Empty;
-//         } else {
-//             elements[y] = newPositionY;
-//         }
-//     }
-// }
 
 fn updateSnakePosition(deltaTime: f32) !void {
     // current head position
@@ -158,10 +143,10 @@ fn updateSnakePosition(deltaTime: f32) !void {
     Path.positions[0] = newPosition.x();
 }
 
-/// Moves the snake's path downward by the current [Game.boardSpeed].
+/// Moves the snake's path downward by the current [Board.boardSpeed].
 ///
 /// Increments the y-coordinate of each position in [Path.positions]
-/// by [Game.boardSpeed].
+/// by [Board.boardSpeed].
 ///
 /// The first position in Path represents the snake's head and is managed by
 /// the [updateSnakePosition] function.
@@ -177,7 +162,7 @@ fn updateSnakePathPosition(deltaTime: f32) void {
         assert(Path.positions[x] != Empty and Path.positions[y] != Empty);
 
         // update checkpoint position
-        const newPositionY = Path.positions[y] + (Game.boardSpeed * deltaTime);
+        const newPositionY = Path.positions[y] + (Board.boardSpeed * deltaTime);
         if (newPositionY > Screen.height + 100) {
             Path.positions[x] = Empty;
             Path.positions[y] = Empty;
@@ -230,6 +215,17 @@ fn drawBodyNodeAt(x: f32, y: f32) void {
 }
 
 fn drawSnake() !void {
+    var pointsText: [2]u8 = undefined;
+    _ = try std.fmt.bufPrint(&pointsText, "{d}", .{Snake.size});
+
+    rl.DrawText(
+        &pointsText,
+        @intFromFloat(Path.positions[0] + 15),
+        @intFromFloat(Path.positions[1] - 15),
+        10,
+        rl.WHITE,
+    );
+
     // draw head
     drawBodyNodeAt(Path.positions[0], Path.positions[1]);
 
