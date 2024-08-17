@@ -106,9 +106,10 @@ fn updateBlocksPosition(deltaTime: f32) !void {
         // remove element if not visible anymore or has 0 points
         if (newPositionY > Screen.height + 100 or Board.blocks[points] <= 0) {
             try Board.deleteBlock(i);
-        } else {
-            Board.blocks[y] = newPositionY;
+            continue;
         }
+
+        Board.blocks[y] = newPositionY;
     }
 }
 
@@ -125,7 +126,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
     assert(mouseX >= 0 and mouseX <= Screen.width);
 
     // calculate new position
-    const newPosition = Vector.new(
+    var newPosition = Vector.new(
         std.math.lerp(lastPosition.x(), mouseX, deltaTime * 10),
         Screen.centerY,
     );
@@ -133,6 +134,8 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // check if is coliding
     var isColliding: bool = false;
+    var canMove: bool = true;
+    var distance: f32 = undefined;
     var blockIndex: usize = 0;
     // while (!isColliding) : (i += 1) {
     for (0..Board.len) |i| {
@@ -144,15 +147,22 @@ fn updateSnakePosition(deltaTime: f32) !void {
         const block = Vector.new(Board.blocks[x], Board.blocks[y]);
         if (block.x() == Empty and block.y() == Empty) break;
 
-        isColliding = Utils.checkCollisionWithBox(newPosition, block, Screen.cellSize);
+        // const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize);
+        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize);
+        isColliding = col.isColliding;
+        canMove = !col.isSideCollision;
+        distance = col.distance;
         if (isColliding) break;
     }
 
-    if (isColliding) {
+    if (!canMove) {
+        newPosition = Vector.new(newPosition.x() - distance, Screen.centerY);
+    }
+
+    if (isColliding and canMove) {
         Board.boardSpeed = 0;
 
         const points = 2 + (blockIndex * Board.vecSize);
-        print("{d}, {d}\n", .{ blockIndex, points });
         if (Board.blocks[points] > 0) {
             Snake.size -= 1;
             Board.blocks[points] -= 1;

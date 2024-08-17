@@ -69,6 +69,31 @@ pub fn checkCollisionWithBox(circle: Vector, box: Vector, boxSize: f32) bool {
     return distanceSquared < (radius * radius);
 }
 
+pub fn checkCollisionWithBoxWithDistance(circle: Vector, box: Vector, boxSize: f32) struct { isColliding: bool, isSideCollision: bool, distance: f32 } {
+    const radius: f32 = @floatFromInt(Snake.radius);
+
+    const boxLeft = box.x();
+    const boxRight = boxLeft + boxSize;
+    const boxTop = box.y();
+    const boxBottom = box.y() + boxSize;
+
+    // Find the closest point to the circle within the rectangle
+    // clamp(value, min, max) - limits value to the range min..max
+    const closestX = std.math.clamp(circle.x(), boxLeft, boxRight);
+    const closestY = std.math.clamp(circle.y(), boxTop, boxBottom);
+
+    // Calculate the distance between the circle's center and this closest point
+    const distanceX = circle.x() - closestX;
+    const distanceY = circle.y() - closestY;
+    const distanceSquared: f32 = (distanceX * distanceX) + (distanceY * distanceY);
+
+    // If the distance is less than the circle's radius, an intersection occurs
+    const collision = distanceSquared < (radius * radius);
+    const isSideCollision = collision and (circle.x() < boxLeft and circle.x() > boxRight);
+    const distance = if (distanceSquared >= 0) distanceSquared else 0;
+    return .{ .isColliding = collision, .isSideCollision = isSideCollision, .distance = distance };
+}
+
 /// Delete the element at [elementIndex] by shifting values past this point.
 pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !void {
     const vecSize = 3;
@@ -96,4 +121,28 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !voi
         array[y] = Empty;
         array[z] = Empty;
     }
+}
+
+/// Check collision between circle and rectangle
+/// From raylib
+pub fn checkCollisionCircleRec(circle: Vector, rec: Vector, recSize: f32) bool {
+    // const width = recSize;
+    // const height = recSize;
+    const halfSide: f32 = recSize / 2;
+
+    const recCenterX: f32 = rec.x() + halfSide;
+    const recCenterY: f32 = rec.y() + halfSide;
+
+    const dx = @abs(circle.x() - recCenterX);
+    const dy = @abs(circle.y() - recCenterY);
+
+    if (dx > (halfSide + Snake.radius)) return false;
+    if (dy > (halfSide + Snake.radius)) return false;
+
+    if (dx <= (halfSide)) return true;
+    if (dy <= (halfSide)) return true;
+
+    const cornerDistanceSq = (dx - halfSide) * (dx - halfSide) + (dy - halfSide) * (dy - halfSide);
+    // const cornerDistanceSq = std.math.pow(f32, dx - halfSide, dx - halfSide) + std.math.pow(f32, dy - halfSide, dy - halfSide);
+    return (cornerDistanceSq <= (Snake.radius * Snake.radius));
 }
