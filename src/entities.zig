@@ -37,11 +37,13 @@ pub const Screen = struct {
 
 pub const Snake = struct {
     const _radius: i8 = 10;
+    const _radiusSquared: f32 = _radius * _radius;
     const _diameter: f32 = _radius * 2;
     const _tolerance: f32 = 0.025;
 
-    size: i16 = 15,
+    size: i16 = 0,
     radius: i8 = _radius,
+    radiusSquared: f32 = _radiusSquared,
     diameter: f32 = _diameter,
     minDiameter: f32 = _diameter - _tolerance,
     maxDiameter: f32 = _diameter + _tolerance,

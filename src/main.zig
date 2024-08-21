@@ -17,6 +17,8 @@ var Snake = @import("entities.zig").Snake.new();
 var Path = @import("entities.zig").Path.new();
 var Board = @import("entities.zig").Board.new();
 
+var boardFullSpeed: f32 = 180;
+
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
     rl.InitWindow(Screen.width, Screen.height, "hello world!");
@@ -53,21 +55,21 @@ pub fn main() !void {
         Board.blocks[points] = Empty;
     }
 
-    Board.blocks[0] = 0 * Screen.cellSize;
+    Board.blocks[0] = 2 * Screen.cellSize;
     Board.blocks[1] = 0;
     Board.blocks[2] = 5;
 
-    Board.blocks[3] = 1 * Screen.cellSize;
-    Board.blocks[4] = 0;
-    Board.blocks[5] = 3;
+    // Board.blocks[3] = 1 * Screen.cellSize;
+    // Board.blocks[4] = 0;
+    // Board.blocks[5] = 3;
 
-    Board.blocks[6] = 2 * Screen.cellSize;
-    Board.blocks[7] = 0;
-    Board.blocks[8] = 4;
+    // Board.blocks[6] = 2 * Screen.cellSize;
+    // Board.blocks[7] = 0;
+    // Board.blocks[8] = 4;
 
-    Board.blocks[9] = 3 * Screen.cellSize;
-    Board.blocks[10] = 0;
-    Board.blocks[11] = 6;
+    // Board.blocks[9] = 3 * Screen.cellSize;
+    // Board.blocks[10] = 0;
+    // Board.blocks[11] = 6;
 
     // fix for first position
     rl.SetMousePosition(Screen.centerX, Screen.centerX);
@@ -76,13 +78,20 @@ pub fn main() !void {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
         if (rl.IsKeyPressed(rl.KEY_D)) Game.showPath = !Game.showPath;
         if (rl.IsKeyPressed(rl.KEY_B)) Game.showBody = !Game.showBody;
+        if (rl.IsKeyPressed(rl.KEY_V)) {
+            if (boardFullSpeed == 180) {
+                boardFullSpeed = 0;
+            } else {
+                boardFullSpeed = 180;
+            }
+        }
         if (!Game.paused and !Game.gameOver) try update();
         try draw();
     }
 }
 
 fn update() anyerror!void {
-    if (Snake.size <= 0) Game.gameOver = true;
+    if (Snake.size < 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
     try updateBlocksPosition(deltaTime);
@@ -131,13 +140,14 @@ fn updateSnakePosition(deltaTime: f32) !void {
         Screen.centerY,
     );
     assert(newPosition.x() >= 0 and newPosition.x() <= Screen.width);
+    const sign: f32 = std.math.sign(newPosition.x() - lastPosition.x());
+    // print("{d}\n", .{sign});
 
     // check if is coliding
     var isColliding: bool = false;
-    var canMove: bool = true;
+    var canMoveSideways: bool = true;
     var distance: f32 = undefined;
     var blockIndex: usize = 0;
-    // while (!isColliding) : (i += 1) {
     for (0..Board.len) |i| {
         blockIndex = i;
         const index = i * Board.vecSize;
@@ -147,19 +157,26 @@ fn updateSnakePosition(deltaTime: f32) !void {
         const block = Vector.new(Board.blocks[x], Board.blocks[y]);
         if (block.x() == Empty and block.y() == Empty) break;
 
-        // const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize);
-        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize);
+        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize, sign);
         isColliding = col.isColliding;
-        canMove = !col.isSideCollision;
+        canMoveSideways = !col.isSideCollision;
         distance = col.distance;
         if (isColliding) break;
     }
 
-    if (!canMove) {
-        newPosition = Vector.new(newPosition.x() - distance, Screen.centerY);
+    if (!canMoveSideways) {
+        const x = 0 + blockIndex;
+        const y = 1 + blockIndex;
+        const block = Vector.new(Board.blocks[x], Board.blocks[y]);
+        const lastPositionCollision = Utils.checkCollisionWithBoxWithDistance(lastPosition, block, Screen.cellSize, 0);
+        if (lastPositionCollision.distance == Snake.radiusSquared) return;
+
+        const disToTouch = if (distance != 0) std.math.sqrt(distance) - 10 else 0;
+        print("dis: {d}, headX: {d}, disToTouch: {d}, newX: {d}\n", .{ distance, newPosition.x(), disToTouch, newPosition.x() + disToTouch });
+        newPosition.data[0] = newPosition.x() + disToTouch;
     }
 
-    if (isColliding and canMove) {
+    if (isColliding and canMoveSideways) {
         Board.boardSpeed = 0;
 
         const points = 2 + (blockIndex * Board.vecSize);
@@ -168,7 +185,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
             Board.blocks[points] -= 1;
         }
     } else {
-        Board.boardSpeed = 180;
+        Board.boardSpeed = boardFullSpeed;
     }
 
     // create a new node in Path if newPosition is in a valid distance from

@@ -69,11 +69,14 @@ pub fn checkCollisionWithBox(circle: Vector, box: Vector, boxSize: f32) bool {
     return distanceSquared < (radius * radius);
 }
 
-pub fn checkCollisionWithBoxWithDistance(circle: Vector, box: Vector, boxSize: f32) struct { isColliding: bool, isSideCollision: bool, distance: f32 } {
+pub fn checkCollisionWithBoxWithDistance(circle: Vector, box: Vector, boxSize: f32, sign: f32) struct { isColliding: bool, isSideCollision: bool, distance: f32 } {
     const radius: f32 = @floatFromInt(Snake.radius);
+    // _ = sign;
 
-    const boxLeft = box.x();
-    const boxRight = boxLeft + boxSize;
+    const boxLeft = if (sign > 0 or sign == 0) box.x() else 0;
+    const boxRight = if (sign > 0 or sign == 0) 10000 else boxLeft + boxSize;
+    // const boxLeft = box.x();
+    // const boxRight = boxLeft + boxSize;
     const boxTop = box.y();
     const boxBottom = box.y() + boxSize;
 
@@ -89,8 +92,9 @@ pub fn checkCollisionWithBoxWithDistance(circle: Vector, box: Vector, boxSize: f
 
     // If the distance is less than the circle's radius, an intersection occurs
     const collision = distanceSquared < (radius * radius);
-    const isSideCollision = collision and (circle.x() < boxLeft and circle.x() > boxRight);
-    const distance = if (distanceSquared >= 0) distanceSquared else 0;
+    const isSideCollision = collision and (circle.y() + radius < boxBottom);
+    // const distance = if (distanceSquared <= radius * radius) distanceSquared else radius * radius;
+    const distance = distanceSquared;
     return .{ .isColliding = collision, .isSideCollision = isSideCollision, .distance = distance };
 }
 
