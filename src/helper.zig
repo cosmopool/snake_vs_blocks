@@ -141,6 +141,5 @@ fn linesIntersect(a: Vector, b: Vector, c: Vector, d: Vector) bool {
     const ub = ((b.x() - a.x()) * (a.y() - c.y()) - (b.y() - a.y()) * (a.x() - c.x())) / line;
 
     const result = ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1;
-    std.debug.print("{}\n", .{result});
     return result;
 }

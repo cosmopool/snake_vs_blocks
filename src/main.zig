@@ -59,17 +59,17 @@ pub fn main() !void {
     Board.blocks[1] = 0;
     Board.blocks[2] = 5;
 
-    // Board.blocks[3] = 1 * Screen.cellSize;
-    // Board.blocks[4] = 0;
-    // Board.blocks[5] = 3;
+    Board.blocks[3] = 1 * Screen.cellSize;
+    Board.blocks[4] = 0;
+    Board.blocks[5] = 3;
 
-    // Board.blocks[6] = 2 * Screen.cellSize;
-    // Board.blocks[7] = 0;
-    // Board.blocks[8] = 4;
+    Board.blocks[6] = 2 * Screen.cellSize;
+    Board.blocks[7] = 0;
+    Board.blocks[8] = 4;
 
-    // Board.blocks[9] = 3 * Screen.cellSize;
-    // Board.blocks[10] = 0;
-    // Board.blocks[11] = 6;
+    Board.blocks[9] = 3 * Screen.cellSize;
+    Board.blocks[10] = 0;
+    Board.blocks[11] = 6;
 
     // fix for first position
     rl.SetMousePosition(Screen.centerX, Screen.centerX);
@@ -158,18 +158,19 @@ fn updateSnakePosition(deltaTime: f32) !void {
         col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock);
         if (col.isColliding) break;
 
-        // check intersection between lastPosition and newPosition
         newPositionCrossesBlock = Utils.checkIntersectionWithBlockSides(lastPosition, newPosition, collisionBlock);
         if (newPositionCrossesBlock) break;
     }
 
+    // lock snake position at closest block side and prevent to get inside the block
     if (col.isSideCollision and @abs(col.distance) < radius) {
-        if (col.closestX > Screen.centerX) {
-            newPosition.data[0] = Screen.centerX + Screen.cellSize / 2 + radius;
+        if (col.closestX > collisionBlock.x() + Screen.cellSize / 2) {
+            newPosition.data[0] = collisionBlock.x() + Screen.cellSize + radius;
         } else {
-            newPosition.data[0] = Screen.centerX - Screen.cellSize / 2 - radius;
+            newPosition.data[0] = collisionBlock.x() - radius;
         }
     } else if (newPositionCrossesBlock) {
+        // prevent snake to teleport to other side of the block
         newPosition = lastPosition;
     }
 
