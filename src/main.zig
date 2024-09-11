@@ -145,6 +145,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
     var col: Utils.Collision = undefined;
     var blockIndex: usize = 0;
     var collisionBlock: Vector = undefined;
+    var newPositionCrossesBlock: bool = false;
     for (0..Board.len) |i| {
         blockIndex = i;
         const index = i * Board.vecSize;
@@ -156,6 +157,10 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
         col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, Screen.cellSize);
         if (col.isColliding) break;
+
+        // check intersection between lastPosition and newPosition
+        newPositionCrossesBlock = Utils.checkIntersectionWithBlockSides(lastPosition, newPosition, collisionBlock);
+        if (newPositionCrossesBlock) break;
     }
 
     if (col.isSideCollision and @abs(col.distance) < radius) {
@@ -164,6 +169,8 @@ fn updateSnakePosition(deltaTime: f32) !void {
         } else {
             newPosition.data[0] = Screen.centerX - Screen.cellSize / 2 - radius;
         }
+    } else if (newPositionCrossesBlock) {
+        newPosition = lastPosition;
     }
 
     if (col.isColliding and !col.isSideCollision) {

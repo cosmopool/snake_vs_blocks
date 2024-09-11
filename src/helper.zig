@@ -116,3 +116,32 @@ pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector, blockSiz
     const isSideCollision = collision and ((circle.y() + radius) < blockBottom);
     return Collision{ .isColliding = collision, .isSideCollision = isSideCollision, .distance = distanceX, .closestX = closestX };
 }
+
+pub fn checkIntersectionWithBlockSides(aStart: Vector, aEnd: Vector, block: Vector) bool {
+    const topLeft = Vector.new(block.x(), block.y());
+    const bottomLeft = Vector.new(block.x(), block.y() + Screen.cellSize);
+    const topRight = Vector.new(block.x() + Screen.cellSize, block.y());
+    const bottomRight = Vector.new(block.x() + Screen.cellSize, block.y() + Screen.cellSize);
+
+    const leftSideIntersection = linesIntersect(aStart, aEnd, topLeft, bottomLeft);
+    if (leftSideIntersection) return true;
+
+    const rightSideIntersection = linesIntersect(aStart, aEnd, topRight, bottomRight);
+    if (rightSideIntersection) return true;
+
+    return false;
+}
+
+fn linesIntersect(a: Vector, b: Vector, c: Vector, d: Vector) bool {
+    const line = (d.y() - c.y()) * (b.x() - a.x()) - (d.x() - c.x()) * (b.y() - a.y());
+
+    // Lines are parallel
+    if (line == 0) return false;
+
+    const ua = ((d.x() - c.x()) * (a.y() - c.y()) - (d.y() - c.y()) * (a.x() - c.x())) / line;
+    const ub = ((b.x() - a.x()) * (a.y() - c.y()) - (b.y() - a.y()) * (a.x() - c.x())) / line;
+
+    const result = ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1;
+    std.debug.print("{}\n", .{result});
+    return result;
+}
