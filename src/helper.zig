@@ -90,24 +90,25 @@ pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collisio
     const blockLeft = block.x();
     const blockRight = blockLeft + Screen.cellSize;
     const blockTop = block.y();
-    const blockBottom = block.y() + Screen.cellSize;
+    const blockBottom = blockTop + Screen.cellSize;
 
     // Find the closest point to the circle within the rectangle
-    // clamp(value, min, max) - limits value to the range min..max
     var closestX = std.math.clamp(circle.x(), blockLeft, blockRight);
     const closestY = std.math.clamp(circle.y(), blockTop, blockBottom);
-    // if circle is inside the block
-    if (circle.x() >= blockLeft and circle.x() <= blockRight) {
-        const distanceToLeftSide = @abs(circle.x() - blockLeft);
-        const distanceToRightSide = @abs(circle.x() - blockRight);
-        if (distanceToLeftSide < distanceToRightSide) closestX = blockLeft else closestX = blockRight;
-    }
 
     // Calculate the distance between the circle's center and this closest point
-    const distanceX = circle.x() - closestX;
+    var distanceX = circle.x() - closestX;
     const distanceY = circle.y() - closestY;
 
     if (distanceY > radius) return Collision{ .isColliding = false, .isSideCollision = false, .distance = distanceX, .closestX = closestX };
+
+    // if circle is inside the block
+    if (circle.x() >= blockLeft and circle.x() <= blockRight and circle.x() >= blockBottom) {
+        const distanceToLeftSide = @abs(circle.x() - blockLeft);
+        const distanceToRightSide = @abs(circle.x() - blockRight);
+        if (distanceToLeftSide < distanceToRightSide) closestX = blockLeft else closestX = blockRight;
+        distanceX = circle.x() - closestX;
+    }
 
     // If the distance is less than the circle's radius, an intersection occurs
     const distanceSquared: f32 = (distanceX * distanceX) + (distanceY * distanceY);
