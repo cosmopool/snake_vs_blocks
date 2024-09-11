@@ -142,12 +142,9 @@ fn updateSnakePosition(deltaTime: f32) !void {
     assert(newPosition.x() >= 0 and newPosition.x() <= Screen.width);
 
     // check if is coliding
-    var isColliding: bool = false;
-    var isSideCollision: bool = true;
-    var distanceToTouch: f32 = undefined;
+    var col: Utils.Collision = undefined;
     var blockIndex: usize = 0;
     var collisionBlock: Vector = undefined;
-    var closestX: f32 = undefined;
     for (0..Board.len) |i| {
         blockIndex = i;
         const index = i * Board.vecSize;
@@ -157,26 +154,19 @@ fn updateSnakePosition(deltaTime: f32) !void {
         collisionBlock = Vector.new(Board.blocks[x], Board.blocks[y]);
         if (collisionBlock.x() == Empty and collisionBlock.y() == Empty) break;
 
-        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, Screen.cellSize);
-        isColliding = col.isColliding;
-        isSideCollision = col.isSideCollision;
-        distanceToTouch = col.distance;
-        closestX = col.closestX;
-        if (isColliding) break;
+        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, Screen.cellSize);
+        if (col.isColliding) break;
     }
 
-    // print("dis: {d}, isSide: {}, colliding: {} \n", .{ distanceToTouch, isSideCollision, @abs(distanceToTouch) < radius });
-    // print("dis: {d}, headX: {d}, disToTouch: {d}, newX: {d}\n", .{ distance, newPosition.x(), disToTouch, newPosition.x() + disToTouch });
-    if (isSideCollision and @abs(distanceToTouch) < radius) {
-        if (closestX > Screen.centerX) {
+    if (col.isSideCollision and @abs(col.distance) < radius) {
+        if (col.closestX > Screen.centerX) {
             newPosition.data[0] = Screen.centerX + Screen.cellSize / 2 + radius;
         } else {
             newPosition.data[0] = Screen.centerX - Screen.cellSize / 2 - radius;
         }
-        // print("lastX: {d}, newX: {d}, asdf: {d}, dis: {d}, cloX: {d}\n", .{ lastPosition.x(), newPosition.x(), asdf, distanceToTouch, closestX });
     }
 
-    if (isColliding and !isSideCollision) {
+    if (col.isColliding and !col.isSideCollision) {
         Board.boardSpeed = 0;
 
         const points = 2 + (blockIndex * Board.vecSize);
