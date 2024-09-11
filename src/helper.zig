@@ -99,11 +99,13 @@ pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collisio
     // Calculate the distance between the circle's center and this closest point
     var distanceX = circle.x() - closestX;
     const distanceY = circle.y() - closestY;
-
     if (distanceY > radius) return Collision{ .isColliding = false, .isSideCollision = false, .distance = distanceX, .closestX = closestX };
 
-    // if circle is inside the block
-    if (circle.x() >= blockLeft and circle.x() <= blockRight and circle.x() >= blockBottom) {
+    // check if circle is inside the block
+    const circleRight = circle.x() + radius;
+    const circleLeft = circle.x() - radius;
+    const circleTop = circle.y() + radius;
+    if ((circleRight > blockLeft or circleLeft < blockRight) and circleTop < blockBottom) {
         const distanceToLeftSide = @abs(circle.x() - blockLeft);
         const distanceToRightSide = @abs(circle.x() - blockRight);
         if (distanceToLeftSide < distanceToRightSide) closestX = blockLeft else closestX = blockRight;
