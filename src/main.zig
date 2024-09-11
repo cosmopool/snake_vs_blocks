@@ -140,43 +140,43 @@ fn updateSnakePosition(deltaTime: f32) !void {
         Screen.centerY,
     );
     assert(newPosition.x() >= 0 and newPosition.x() <= Screen.width);
-    const sign: f32 = std.math.sign(newPosition.x() - lastPosition.x());
-    // print("{d}\n", .{sign});
 
     // check if is coliding
     var isColliding: bool = false;
-    var canMoveSideways: bool = true;
-    var distance: f32 = undefined;
+    var isSideCollision: bool = true;
+    var distanceToTouch: f32 = undefined;
     var blockIndex: usize = 0;
+    var collisionBlock: Vector = undefined;
+    var closestX: f32 = undefined;
     for (0..Board.len) |i| {
         blockIndex = i;
         const index = i * Board.vecSize;
         if (index >= Board.len - Board.vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
-        const block = Vector.new(Board.blocks[x], Board.blocks[y]);
-        if (block.x() == Empty and block.y() == Empty) break;
+        collisionBlock = Vector.new(Board.blocks[x], Board.blocks[y]);
+        if (collisionBlock.x() == Empty and collisionBlock.y() == Empty) break;
 
-        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, block, Screen.cellSize, sign);
+        const col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, Screen.cellSize);
         isColliding = col.isColliding;
-        canMoveSideways = !col.isSideCollision;
-        distance = col.distance;
+        isSideCollision = col.isSideCollision;
+        distanceToTouch = col.distance;
+        closestX = col.closestX;
         if (isColliding) break;
     }
 
-    if (!canMoveSideways) {
-        const x = 0 + blockIndex;
-        const y = 1 + blockIndex;
-        const block = Vector.new(Board.blocks[x], Board.blocks[y]);
-        const lastPositionCollision = Utils.checkCollisionWithBoxWithDistance(lastPosition, block, Screen.cellSize, 0);
-        if (lastPositionCollision.distance == Snake.radiusSquared) return;
-
-        const disToTouch = if (distance != 0) std.math.sqrt(distance) - 10 else 0;
-        print("dis: {d}, headX: {d}, disToTouch: {d}, newX: {d}\n", .{ distance, newPosition.x(), disToTouch, newPosition.x() + disToTouch });
-        newPosition.data[0] = newPosition.x() + disToTouch;
+    // print("dis: {d}, isSide: {}, colliding: {} \n", .{ distanceToTouch, isSideCollision, @abs(distanceToTouch) < radius });
+    // print("dis: {d}, headX: {d}, disToTouch: {d}, newX: {d}\n", .{ distance, newPosition.x(), disToTouch, newPosition.x() + disToTouch });
+    if (isSideCollision and @abs(distanceToTouch) < radius) {
+        if (closestX > Screen.centerX) {
+            newPosition.data[0] = Screen.centerX + Screen.cellSize / 2 + radius;
+        } else {
+            newPosition.data[0] = Screen.centerX - Screen.cellSize / 2 - radius;
+        }
+        // print("lastX: {d}, newX: {d}, asdf: {d}, dis: {d}, cloX: {d}\n", .{ lastPosition.x(), newPosition.x(), asdf, distanceToTouch, closestX });
     }
 
-    if (isColliding and canMoveSideways) {
+    if (isColliding and !isSideCollision) {
         Board.boardSpeed = 0;
 
         const points = 2 + (blockIndex * Board.vecSize);
