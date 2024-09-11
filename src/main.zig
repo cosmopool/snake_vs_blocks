@@ -155,7 +155,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
         collisionBlock = Vector.new(Board.blocks[x], Board.blocks[y]);
         if (collisionBlock.x() == Empty and collisionBlock.y() == Empty) break;
 
-        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, Screen.cellSize);
+        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock);
         if (col.isColliding) break;
 
         // check intersection between lastPosition and newPosition

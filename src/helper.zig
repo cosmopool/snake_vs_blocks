@@ -3,6 +3,7 @@ const std = @import("std");
 const Vector = @import("vector.zig").Vector;
 var Snake = @import("entities.zig").Snake.new();
 const Empty = @import("entities.zig").Empty;
+const Screen = @import("entities.zig").Screen.new();
 
 pub const Collision = struct {
     isColliding: bool,
@@ -83,15 +84,13 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !voi
     }
 }
 
-pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector, blockSize: f32) Collision {
+pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collision {
     const radius: f32 = @floatFromInt(Snake.radius);
 
-    // const blockLeft = if (sign >= 0) block.x() else 0;
-    // const blockRight = if (sign >= 0) Screen.width else blockLeft + blockSize;
     const blockLeft = block.x();
-    const blockRight = blockLeft + blockSize;
+    const blockRight = blockLeft + Screen.cellSize;
     const blockTop = block.y();
-    const blockBottom = block.y() + blockSize;
+    const blockBottom = block.y() + Screen.cellSize;
 
     // Find the closest point to the circle within the rectangle
     // clamp(value, min, max) - limits value to the range min..max
