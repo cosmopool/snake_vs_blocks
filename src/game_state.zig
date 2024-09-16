@@ -19,4 +19,5 @@ pub const GameState = struct {
     /// Store blocks as (x, y, points) vector
     boardBlocks: [Board.len]f32 = undefined,
     boardSpeed: f32 = Board.fullSpeed,
+    distanceFromLastBlock: u16 = 0,
 };

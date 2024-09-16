@@ -3,6 +3,7 @@ const rl = @import("raylib");
 
 const Vector = @import("vector.zig").Vector;
 const Constants = @import("constants.zig");
+const Snake = @import("snake.zig");
 
 pub const Collision = struct {
     isColliding: bool,
@@ -83,7 +84,41 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32) !void {
     }
 }
 
-pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector, radius: f32) Collision {
+/// Delete the element at [elementIndex] by shifting values past this point.
+pub fn deleteVecSize4Element(elementIndex: usize, array: []f32, len: usize) !void {
+    const vecSize = 4;
+
+    for (elementIndex..len - 1) |i| {
+        const index = i * vecSize;
+        if (index > len - vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const z = 2 + index;
+        const w = 3 + index;
+
+        // check if this block and the next is empty
+        if (array[x] == Constants.empty and array[y] == Constants.empty and
+            array[x + vecSize] == Constants.empty and array[y + vecSize] == Constants.empty) break;
+        std.debug.assert(array[x] != Constants.empty and array[y] != Constants.empty);
+
+        array[x] = array[x + vecSize];
+        array[y] = array[y + vecSize];
+        array[z] = array[z + vecSize];
+        array[w] = array[w + vecSize];
+
+        // is this the last element?
+        if (i < len - vecSize - 1) continue;
+
+        array[x] = Constants.empty;
+        array[y] = Constants.empty;
+        array[z] = Constants.empty;
+        array[w] = Constants.empty;
+    }
+}
+
+pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collision {
+    const radius: f32 = Snake.radius;
+
     const blockLeft = block.x();
     const blockRight = blockLeft + Constants.screenCellSize;
     const blockTop = block.y();

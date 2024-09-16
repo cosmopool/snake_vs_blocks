@@ -11,9 +11,9 @@ const GameState = @import("game_state.zig").GameState;
 //--------------------------------------------------------------------------------------
 // constants
 
-const snakeRadius: i8 = 10;
-const radiusSquared: f32 = snakeRadius * snakeRadius;
-const diameter: f32 = snakeRadius * 2;
+pub const radius: f32 = 10;
+const radiusSquared: f32 = radius * radius;
+const diameter: f32 = radius * 2;
 const minDiameter: f32 = diameter - tolerance;
 const maxDiameter: f32 = diameter + tolerance;
 const step: f32 = 0.01;
@@ -65,7 +65,6 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
     const lastPosition = Vector.new(state.pathPositions[0], state.pathPositions[1]);
 
     // limit mouse position to window boundaries
-    const radius: f32 = @floatFromInt(snakeRadius);
     const screenWidthLimit: f32 = Constants.screenWidth - radius;
 
     // get mouse X position
@@ -93,7 +92,7 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
         collisionBlock = Vector.new(state.boardBlocks[x], state.boardBlocks[y]);
         if (collisionBlock.x() == Constants.empty and collisionBlock.y() == Constants.empty) break;
 
-        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, snakeRadius);
+        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, radius);
         if (col.isColliding) break;
 
         newPositionCrossesBlock = Utils.checkIntersectionWithBlockSides(lastPosition, newPosition, collisionBlock);
@@ -190,7 +189,7 @@ fn addPositionInPath(position: Vector, state: *GameState) void {
 }
 
 fn drawBodyNodeAt(x: f32, y: f32) void {
-    rl.drawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(snakeRadius), .red);
+    rl.drawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(radius), .red);
 }
 
 fn drawLineFrom(start: Vector, end: Vector) void {
