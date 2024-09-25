@@ -18,12 +18,24 @@ var Path = @import("entities.zig").Path.new();
 var Board = @import("entities.zig").Board.new();
 
 var boardFullSpeed: f32 = 180;
+var spawnRule = [_]u8{ 1, 1, 1, 1, 2, 2, 2, 5, 5, 5 };
+var distanceFromLastBlock: u16 = 0;
+var random: *const std.Random = undefined;
 
 pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
     rl.InitWindow(Screen.width, Screen.height, "hello world!");
     defer rl.CloseWindow();
     rl.SetTargetFPS(Screen.fps);
+
+    var prng = std.rand.DefaultPrng.init(blk: {
+        var seed: u64 = undefined;
+        try std.posix.getrandom(std.mem.asBytes(&seed));
+        break :blk seed;
+    });
+    random = &prng.random();
+    random.shuffleWithIndex(u8, &spawnRule, usize);
+    print("{d}\n", .{spawnRule});
 
     // populate Path.positions array
     Path.positions[0] = Screen.centerX;
@@ -55,24 +67,10 @@ pub fn main() !void {
         Board.blocks[points] = Empty;
     }
 
-    Board.blocks[0] = 2 * Screen.cellSize;
-    Board.blocks[1] = 0;
-    Board.blocks[2] = 5;
-
-    Board.blocks[3] = 1 * Screen.cellSize;
-    Board.blocks[4] = 0;
-    Board.blocks[5] = 3;
-
-    Board.blocks[6] = 2 * Screen.cellSize;
-    Board.blocks[7] = 0;
-    Board.blocks[8] = 4;
-
-    Board.blocks[9] = 3 * Screen.cellSize;
-    Board.blocks[10] = 0;
-    Board.blocks[11] = 6;
-
     // fix for first position
     rl.SetMousePosition(Screen.centerX, Screen.centerX);
+
+    try spawnBlocks(random);
 
     while (!rl.WindowShouldClose()) {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
@@ -95,6 +93,8 @@ fn update() anyerror!void {
     if (Snake.size < 0) Game.gameOver = true;
     const deltaTime = rl.GetFrameTime();
 
+    distanceFromLastBlock += @intFromFloat(Board.boardSpeed);
+    try spawnBlocks(random);
     try updateBlocksPosition(deltaTime);
     updateSnakePathPosition(deltaTime);
     try updateSnakePosition(deltaTime);
@@ -109,7 +109,7 @@ fn updateBlocksPosition(deltaTime: f32) !void {
         const points = 2 + index;
 
         if (Board.blocks[x] == Empty and Board.blocks[y] == Empty) break;
-        assert(Board.blocks[x] != Empty and Board.blocks[y] != Empty);
+        assert(Board.blocks[x] != Empty and Board.blocks[y] != Empty and Board.blocks[points] != Empty);
 
         // update element position
         const newPositionY = Board.blocks[y] + (Board.boardSpeed * deltaTime);
@@ -372,7 +372,7 @@ fn drawBlocks() !void {
             .width = Screen.cellSize,
             .height = Screen.cellSize,
         };
-        rl.DrawRectangleRounded(rec, 0.2, 0, rl.BLUE);
+        rl.DrawRectangleRounded(rec, 0.2, 0, generateColorForGivingBlockPoint(points));
 
         var pointsText: [@sizeOf(u16)]u8 = undefined;
         _ = try std.fmt.bufPrint(&pointsText, "{d:0.0}", .{points});
@@ -381,6 +381,114 @@ fn drawBlocks() !void {
         const textSize = rl.MeasureText(&pointsText, @intCast(fontSize));
         const textX = x + (Screen.cellSize / 2) - @as(f32, @floatFromInt(@divTrunc(textSize, 2)));
         const textY = y + (Screen.cellSize / 2) - (fontSize / 2);
-        rl.DrawText(&pointsText, @intFromFloat(textX), @intFromFloat(textY), @intCast(fontSize), rl.WHITE);
+        rl.DrawText(&pointsText, @intFromFloat(textX), @intFromFloat(textY), @intCast(fontSize), rl.BLACK);
     }
+}
+
+fn spawnBlocks(rand: *const std.Random) !void {
+    const distance: u16 = if (rand.boolean()) 10000 else 20000;
+
+    if (distanceFromLastBlock < distance) return;
+    distanceFromLastBlock = 0;
+
+    const quantityIndex: u8 = rand.intRangeAtMost(u8, 0, spawnRule.len - 1);
+    const quantityToSpawn: u8 = spawnRule[quantityIndex];
+
+    if (quantityToSpawn == 0) return;
+
+    // find empty idx in blocks array
+    // check if this index has [quantity] positions Empty to place new blocks
+    var haveTheSpaceNecessary: bool = true;
+    var startPlacingAtIdx: usize = 0;
+    for (startPlacingAtIdx..Board.len) |i| {
+        const index = i * Board.vecSize;
+        if (index >= Board.len / Board.vecSize) break;
+
+        if (i - startPlacingAtIdx >= quantityToSpawn) {
+            haveTheSpaceNecessary = true;
+            break;
+        }
+
+        if (Board.blocks[0 + index] != Empty and Board.blocks[1 + index] != Empty) {
+            startPlacingAtIdx = i + 1;
+        }
+    }
+
+    if (!haveTheSpaceNecessary) return;
+
+    var quantityRemaning = quantityToSpawn;
+    for (startPlacingAtIdx..startPlacingAtIdx + quantityToSpawn) |h| {
+        assert(quantityRemaning >= 0);
+        quantityRemaning -= 1;
+        const index: usize = h * Board.vecSize;
+        if (index >= Board.len / Board.vecSize) break;
+
+        var position: f32 = @floatFromInt(quantityRemaning);
+        if (quantityToSpawn == 1) position = @floatFromInt(rand.intRangeAtMost(u8, 1, 5));
+        if (quantityToSpawn == 2) {
+            if (quantityRemaning == 1) position = @floatFromInt(rand.intRangeAtMost(u8, 0, 2));
+            if (quantityRemaning == 0) position = @floatFromInt(rand.intRangeAtMost(u8, 3, 4));
+        }
+
+        Board.blocks[0 + index] = position * Screen.cellSize; // x position
+        Board.blocks[1 + index] = -Screen.cellSize; // y position
+        Board.blocks[2 + index] = @floatFromInt(rand.intRangeAtMost(u8, 1, 50)); // Points
+    }
+}
+
+fn generateColorForGivingBlockPoint(n: f32) rl.Color {
+    assert(n >= 0 and n <= 50);
+    const clampedValue = @max(1, @min(50, n));
+    const t: f32 = (clampedValue - 1) / (50 - 1);
+
+    var minR: f32 = 98;
+    var minG: f32 = 224;
+    var minB: f32 = 225;
+    var maxR: f32 = 0;
+    var maxG: f32 = 0;
+    var maxB: f32 = 0;
+
+    if (n >= 0 and n <= 10) {
+        maxR = 71;
+        maxG = 255;
+        maxB = 151;
+    } else if (n <= 20) {
+        minR = 71;
+        minG = 255;
+        minB = 151;
+
+        maxR = 8;
+        maxG = 233;
+        maxB = 0;
+    } else if (n <= 30) {
+        minR = 8;
+        minG = 233;
+        minB = 0;
+
+        maxR = 194;
+        maxG = 233;
+        maxB = 0;
+    } else if (n <= 40) {
+        minR = 194;
+        minG = 233;
+        minB = 0;
+
+        maxR = 233;
+        maxG = 155;
+        maxB = 0;
+    } else if (n <= 50) {
+        minR = 233;
+        minG = 155;
+        minB = 0;
+
+        maxR = 233;
+        maxG = 23;
+        maxB = 0;
+    }
+
+    const r: u8 = @intFromFloat(std.math.lerp(minR, maxR, t));
+    const g: u8 = @intFromFloat(std.math.lerp(minG, maxG, t));
+    const b: u8 = @intFromFloat(std.math.lerp(minB, maxB, t));
+
+    return rl.Color{ .r = r, .g = g, .b = b, .a = 255 };
 }
