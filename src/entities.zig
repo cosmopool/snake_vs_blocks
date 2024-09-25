@@ -9,6 +9,7 @@ pub const Game = struct {
     gameOver: bool = false,
     showPath: bool = false,
     showBody: bool = true,
+    godMode: bool = false,
 
     pub fn new() Game {
         return Game{};
