@@ -78,6 +78,7 @@ pub fn main() !void {
         if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
         if (rl.IsKeyPressed(rl.KEY_D)) Game.showPath = !Game.showPath;
         if (rl.IsKeyPressed(rl.KEY_B)) Game.showBody = !Game.showBody;
+        if (rl.IsKeyPressed(rl.KEY_G)) Game.godMode = !Game.godMode;
         if (rl.IsKeyPressed(rl.KEY_V)) {
             if (boardFullSpeed == 180) {
                 boardFullSpeed = 0;
@@ -179,7 +180,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
         const points = 2 + (blockIndex * Board.vecSize);
         if (Board.blocks[points] > 0) {
-            Snake.size -= 1;
+            if (!Game.godMode) Snake.size -= 1;
             Board.blocks[points] -= 1;
         }
     } else {
