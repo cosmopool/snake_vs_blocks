@@ -214,8 +214,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
 /// The first position in Path represents the snake's head and is managed by
 /// the [updateSnakePosition] function.
 fn updateSnakePathPosition(deltaTime: f32) void {
-    for (0..Path.len) |i| {
-        if (i == 0) continue;
+    for (1..Path.len) |i| {
         const index = i * Path.vecSize;
         if (index > Path.len) break;
         const x = 0 + index;
