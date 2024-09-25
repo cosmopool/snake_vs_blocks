@@ -17,6 +17,8 @@ var Snake = @import("entities.zig").Snake.new();
 var Path = @import("entities.zig").Path.new();
 var Board = @import("entities.zig").Board.new();
 
+const waitTimeToPop: u8 = 50;
+var lastTimeThatPop: i64 = 0;
 var boardFullSpeed: f32 = 180;
 var spawnRule = [_]u8{ 1, 1, 1, 1, 2, 2, 2, 5, 5, 5 };
 var distanceFromLastBlock: u16 = 0;
@@ -34,6 +36,7 @@ pub fn main() !void {
         break :blk seed;
     });
     random = &prng.random();
+    // TODO: maybe use a fixed spawnRule? random seems like a bad idea
     random.shuffleWithIndex(u8, &spawnRule, usize);
     print("{d}\n", .{spawnRule});
 
@@ -178,10 +181,14 @@ fn updateSnakePosition(deltaTime: f32) !void {
     if (col.isColliding and !col.isSideCollision) {
         Board.boardSpeed = 0;
 
-        const points = 2 + (blockIndex * Board.vecSize);
-        if (Board.blocks[points] > 0) {
-            if (!Game.godMode) Snake.size -= 1;
-            Board.blocks[points] -= 1;
+        const readyToPopSnake = std.time.milliTimestamp() - lastTimeThatPop >= waitTimeToPop;
+        if (readyToPopSnake) {
+            lastTimeThatPop = std.time.milliTimestamp();
+            const points = 2 + (blockIndex * Board.vecSize);
+            if (Board.blocks[points] > 0) {
+                if (!Game.godMode) Snake.size -= 1;
+                Board.blocks[points] -= 1;
+            }
         }
     } else {
         Board.boardSpeed = boardFullSpeed;
