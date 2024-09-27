@@ -196,11 +196,11 @@ fn updateSnakePosition(deltaTime: f32) !void {
 
     // create a new node in Path if newPosition is in a valid distance from
     // previous node position in Path
-    const prevPathNode = Vector.new(Path.positions[1], Path.positions[2]);
-    const distanceToLastPosition = newPosition.distance(prevPathNode);
-    if (distanceToLastPosition >= Path.resolution) {
-        addPositionInPath(newPosition);
-    }
+    // const prevPathNode = Vector.new(Path.positions[1], Path.positions[2]);
+    // const distanceToLastPosition = newPosition.distance(prevPathNode);
+    // if (distanceToLastPosition >= Path.resolution) {
+    addPositionInPath(newPosition);
+    // }
 
     // update snake head position
     Path.positions[0] = newPosition.x();
