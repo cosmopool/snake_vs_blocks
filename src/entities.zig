@@ -40,6 +40,7 @@ pub const Snake = struct {
     const _radiusSquared: f32 = _radius * _radius;
     const _diameter: f32 = _radius * 2;
     const _tolerance: f32 = 0.025;
+    const _len: usize = 1000;
 
     size: i16 = 10,
     radius: i8 = _radius,
@@ -48,6 +49,10 @@ pub const Snake = struct {
     minDiameter: f32 = _diameter - _tolerance,
     maxDiameter: f32 = _diameter + _tolerance,
     step: f32 = 0.01,
+
+    len: usize = _len,
+    nodes: [_len]f32 = undefined,
+    vecSize: usize = 2,
 
     pub fn new() Snake {
         return Snake{};
