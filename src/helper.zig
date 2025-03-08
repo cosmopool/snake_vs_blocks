@@ -1,9 +1,8 @@
 const std = @import("std");
+const rl = @import("raylib");
 
 const Vector = @import("vector.zig").Vector;
-var Snake = @import("entities.zig").Snake.new();
-const Empty = @import("entities.zig").Empty;
-const Screen = @import("entities.zig").Screen.new();
+const Constants = @import("constants.zig");
 
 pub const Collision = struct {
     isColliding: bool,
@@ -67,9 +66,9 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !voi
         const z = 2 + index;
 
         // check if this block and the next is empty
-        if (array[x] == Empty and array[y] == Empty and
-            array[x + vecSize] == Empty and array[y + vecSize] == Empty) break;
-        std.debug.assert(array[x] != Empty and array[y] != Empty);
+        if (array[x] == Constants.empty and array[y] == Constants.empty and
+            array[x + vecSize] == Constants.empty and array[y + vecSize] == Constants.empty) break;
+        std.debug.assert(array[x] != Constants.empty and array[y] != Constants.empty);
 
         array[x] = array[x + vecSize];
         array[y] = array[y + vecSize];
@@ -78,19 +77,17 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !voi
         // is this the last element?
         if (i < len - vecSize - 1) continue;
 
-        array[x] = Empty;
-        array[y] = Empty;
-        array[z] = Empty;
+        array[x] = Constants.empty;
+        array[y] = Constants.empty;
+        array[z] = Constants.empty;
     }
 }
 
-pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collision {
-    const radius: f32 = @floatFromInt(Snake.radius);
-
+pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector, radius: f32) Collision {
     const blockLeft = block.x();
-    const blockRight = blockLeft + Screen.cellSize;
+    const blockRight = blockLeft + Constants.screenCellSize;
     const blockTop = block.y();
-    const blockBottom = blockTop + Screen.cellSize;
+    const blockBottom = blockTop + Constants.screenCellSize;
 
     // Find the closest point to the circle within the rectangle
     var closestX = std.math.clamp(circle.x(), blockLeft, blockRight);
@@ -121,9 +118,9 @@ pub fn checkCollisionWithBoxWithDistance(circle: Vector, block: Vector) Collisio
 
 pub fn checkIntersectionWithBlockSides(aStart: Vector, aEnd: Vector, block: Vector) bool {
     const topLeft = Vector.new(block.x(), block.y());
-    const bottomLeft = Vector.new(block.x(), block.y() + Screen.cellSize);
-    const topRight = Vector.new(block.x() + Screen.cellSize, block.y());
-    const bottomRight = Vector.new(block.x() + Screen.cellSize, block.y() + Screen.cellSize);
+    const bottomLeft = Vector.new(block.x(), block.y() + Constants.screenCellSize);
+    const topRight = Vector.new(block.x() + Constants.screenCellSize, block.y());
+    const bottomRight = Vector.new(block.x() + Constants.screenCellSize, block.y() + Constants.screenCellSize);
 
     const leftSideIntersection = linesIntersect(aStart, aEnd, topLeft, bottomLeft);
     if (leftSideIntersection) return true;
@@ -145,4 +142,11 @@ fn linesIntersect(a: Vector, b: Vector, c: Vector, d: Vector) bool {
 
     const result = ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1;
     return result;
+}
+
+pub fn drawAtCenter(text: [:0]const u8, size: ?usize, color: ?rl.Color) void {
+    const fontSize = size orelse 30;
+    const textSize = rl.measureText(text, @intCast(fontSize));
+    const x = @divTrunc(Constants.screenWidth, 2) - @divTrunc(textSize, 2);
+    rl.drawText(text, @intCast(x), Constants.screenCenterY, @intCast(fontSize), color orelse .white);
 }
