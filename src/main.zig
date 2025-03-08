@@ -2,15 +2,12 @@ const std = @import("std");
 const print = std.debug.print;
 const assert = std.debug.assert;
 const ArrayList = std.ArrayList;
-const rl = @cImport({
-    @cInclude("raylib.h");
-});
+const rl = @import("raylib");
 
 const Vector = @import("vector.zig").Vector;
 const Utils = @import("helper.zig");
 
 const Empty = @import("entities.zig").Empty;
-const Color = rl.CLITERAL(rl.Color);
 const Screen = @import("entities.zig").Screen.new();
 var Game = @import("entities.zig").Game.new();
 var Snake = @import("entities.zig").Snake.new();
@@ -20,10 +17,10 @@ var Board = @import("entities.zig").Board.new();
 var boardFullSpeed: f32 = 180;
 
 pub fn main() !void {
-    rl.SetConfigFlags(rl.FLAG_VSYNC_HINT);
-    rl.InitWindow(Screen.width, Screen.height, "hello world!");
-    defer rl.CloseWindow();
-    rl.SetTargetFPS(Screen.fps);
+    rl.setConfigFlags(rl.ConfigFlags{ .vsync_hint = true });
+    rl.initWindow(Screen.width, Screen.height, "hello world!");
+    defer rl.closeWindow();
+    rl.setTargetFPS(Screen.fps);
 
     // populate Path.positions array
     Path.positions[0] = Screen.centerX;
@@ -72,13 +69,13 @@ pub fn main() !void {
     Board.blocks[11] = 6;
 
     // fix for first position
-    rl.SetMousePosition(Screen.centerX, Screen.centerX);
+    rl.setMousePosition(Screen.centerX, Screen.centerX);
 
-    while (!rl.WindowShouldClose()) {
-        if (rl.IsKeyPressed(rl.KEY_SPACE)) Game.paused = !Game.paused;
-        if (rl.IsKeyPressed(rl.KEY_D)) Game.showPath = !Game.showPath;
-        if (rl.IsKeyPressed(rl.KEY_B)) Game.showBody = !Game.showBody;
-        if (rl.IsKeyPressed(rl.KEY_V)) {
+    while (!rl.windowShouldClose()) {
+        if (rl.isKeyPressed(.space)) Game.paused = !Game.paused;
+        if (rl.isKeyPressed(.d)) Game.showPath = !Game.showPath;
+        if (rl.isKeyPressed(.b)) Game.showBody = !Game.showBody;
+        if (rl.isKeyPressed(.v)) {
             if (boardFullSpeed == 180) {
                 boardFullSpeed = 0;
             } else {
@@ -92,7 +89,7 @@ pub fn main() !void {
 
 fn update() anyerror!void {
     if (Snake.size < 0) Game.gameOver = true;
-    const deltaTime = rl.GetFrameTime();
+    const deltaTime = rl.getFrameTime();
 
     try updateBlocksPosition(deltaTime);
     updateSnakePathPosition(deltaTime);
@@ -131,7 +128,7 @@ fn updateSnakePosition(deltaTime: f32) !void {
     const screenWidthLimit: f32 = Screen.width - radius;
 
     // get mouse X position
-    const mouseX = std.math.clamp(rl.GetMousePosition().x, radius, screenWidthLimit);
+    const mouseX = std.math.clamp(rl.getMousePosition().x, radius, screenWidthLimit);
     assert(mouseX >= 0 and mouseX <= Screen.width);
 
     // calculate new position
@@ -252,9 +249,9 @@ fn addPositionInPath(position: Vector) void {
 }
 
 fn draw() anyerror!void {
-    rl.BeginDrawing();
-    defer rl.EndDrawing();
-    rl.ClearBackground(rl.BLACK);
+    rl.beginDrawing();
+    defer rl.endDrawing();
+    rl.clearBackground(.black);
 
     try drawBlocks();
     try drawSnake();
@@ -262,23 +259,24 @@ fn draw() anyerror!void {
     if (Game.gameOver) drawAtCenter("GAME OVER", 50, null);
     if (Game.paused) drawAtCenter("PAUSED", null, null);
 
-    rl.DrawFPS(rl.GetScreenWidth() - 95, 10);
+    rl.drawFPS(rl.getScreenWidth() - 95, 10);
 }
 
 fn drawBodyNodeAt(x: f32, y: f32) void {
-    rl.DrawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(Snake.radius), rl.RED);
+    rl.drawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(Snake.radius), .red);
 }
 
 fn drawSnake() !void {
-    var pointsText: [2]u8 = undefined;
-    _ = try std.fmt.bufPrint(&pointsText, "{d}", .{Snake.size});
+    var pointsText: [20]u8 = undefined;
+    const formattedText = try std.fmt.bufPrint(&pointsText, "{d}", .{Snake.size});
+    pointsText[formattedText.len] = 0;
 
-    rl.DrawText(
-        &pointsText,
+    rl.drawText(
+        pointsText[0..formattedText.len :0],
         @intFromFloat(Path.positions[0] + 15),
         @intFromFloat(Path.positions[1] - 15),
         10,
-        rl.WHITE,
+        .white,
     );
 
     // draw head
@@ -336,20 +334,20 @@ fn drawSnake() !void {
 }
 
 fn drawLineFrom(start: Vector, end: Vector) void {
-    return rl.DrawLine(
+    return rl.drawLine(
         @intFromFloat(start.x()),
         @intFromFloat(start.y()),
         @intFromFloat(end.x()),
         @intFromFloat(end.y()),
-        rl.BLUE,
+        .blue,
     );
 }
 
-fn drawAtCenter(text: [*c]const u8, size: ?usize, color: ?Color) void {
+fn drawAtCenter(text: [:0]const u8, size: ?usize, color: ?rl.Color) void {
     const fontSize = size orelse 30;
-    const textSize = rl.MeasureText(text, @intCast(fontSize));
+    const textSize = rl.measureText(text, @intCast(fontSize));
     const x = @divTrunc(Screen.width, 2) - @divTrunc(textSize, 2);
-    rl.DrawText(text, @intCast(x), Screen.centerY, @intCast(fontSize), color orelse rl.WHITE);
+    rl.drawText(text, @intCast(x), Screen.centerY, @intCast(fontSize), color orelse .white);
 }
 
 fn drawBlocks() !void {
@@ -371,15 +369,17 @@ fn drawBlocks() !void {
             .width = Screen.cellSize,
             .height = Screen.cellSize,
         };
-        rl.DrawRectangleRounded(rec, 0.2, 0, rl.BLUE);
+        rl.drawRectangleRounded(rec, 0.2, 0, .blue);
 
-        var pointsText: [@sizeOf(u16)]u8 = undefined;
-        _ = try std.fmt.bufPrint(&pointsText, "{d:0.0}", .{points});
+        var pointsText: [20]u8 = undefined;
+        const formattedText = try std.fmt.bufPrint(&pointsText, "{d:0.0}", .{points});
+        // Add null terminator explicitly
+        pointsText[formattedText.len] = 0;
 
         const fontSize = 20;
-        const textSize = rl.MeasureText(&pointsText, @intCast(fontSize));
+        const textSize = rl.measureText(pointsText[0..formattedText.len :0], @intCast(fontSize));
         const textX = x + (Screen.cellSize / 2) - @as(f32, @floatFromInt(@divTrunc(textSize, 2)));
         const textY = y + (Screen.cellSize / 2) - (fontSize / 2);
-        rl.DrawText(&pointsText, @intFromFloat(textX), @intFromFloat(textY), @intCast(fontSize), rl.WHITE);
+        rl.drawText(pointsText[0..formattedText.len :0], @intFromFloat(textX), @intFromFloat(textY), fontSize, .white);
     }
 }

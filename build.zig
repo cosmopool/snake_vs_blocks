@@ -26,11 +26,14 @@ pub fn build(b: *std.Build) void {
         "Prioritize performance, safety, or binary size (-O flag), defaults to value of optimize option",
     ) orelse optimize;
 
-    const raylib_dep = b.dependency("raylib", .{
+    const raylib_dep = b.dependency("raylib_zig", .{
         .target = target,
         .optimize = raylib_optimize,
     });
-    exe.linkLibrary(raylib_dep.artifact("raylib"));
+    const raylib = raylib_dep.module("raylib");
+    const raylib_artifact = raylib_dep.artifact("raylib");
+    exe.linkLibrary(raylib_artifact);
+    exe.root_module.addImport("raylib", raylib);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
