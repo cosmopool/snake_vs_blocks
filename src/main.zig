@@ -31,9 +31,9 @@ pub fn main() !void {
     //--------------------------------------------------------------------------------------
     // Game loop
     while (!rl.windowShouldClose()) {
-        checkPressedKeys();
-        if (!state.paused and !state.gameOver) try update();
-        try draw();
+        handleInput(&state);
+        try update(&state);
+        try draw(&state);
     }
     //--------------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ pub fn main() !void {
     //--------------------------------------------------------------------------------------
 }
 
-fn checkPressedKeys(state: *GameState) void {
+fn handleInput(state: *GameState) void {
     if (rl.isKeyPressed(.space)) state.paused = !state.paused;
     if (rl.isKeyPressed(.d)) state.showPath = !state.showPath;
     if (rl.isKeyPressed(.b)) state.showBody = !state.showBody;
@@ -57,7 +57,9 @@ fn checkPressedKeys(state: *GameState) void {
 }
 
 fn update(state: *GameState) anyerror!void {
+    if (state.paused or state.gameOver) return;
     if (state.snakeSize < 0) state.gameOver = true;
+
     const deltaTime = rl.getFrameTime();
 
     try Board.update(deltaTime, &state);
