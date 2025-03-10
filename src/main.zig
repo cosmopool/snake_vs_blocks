@@ -11,6 +11,7 @@ const Constants = @import("constants.zig");
 
 const Vector = @import("vector.zig").Vector;
 const GameState = @import("game_state.zig").GameState;
+const RingBuffer = @import("ring_buffer.zig").RingBuffer;
 
 pub fn main() !void {
     //--------------------------------------------------------------------------------------
@@ -19,14 +20,16 @@ pub fn main() !void {
     rl.initWindow(Constants.screenWidth, Constants.screenHeight, "hello world!");
     rl.setTargetFPS(Constants.fps);
 
-    var state = GameState{};
+    var state = GameState{
+        .boardBlocks = RingBuffer(f32, Board.len).init(),
+    };
 
     try Board.init(&state);
     try Snake.init(&state);
-    //--------------------------------------------------------------------------------------
 
     // fix for first position
     rl.setMousePosition(Constants.screenCenterX, Constants.screenCenterY);
+    //--------------------------------------------------------------------------------------
 
     //--------------------------------------------------------------------------------------
     // Game loop

@@ -3,6 +3,7 @@ const Utils = @import("helper.zig");
 const Constants = @import("constants.zig");
 const Board = @import("board.zig");
 const Snake = @import("snake.zig");
+const RingBuffer = @import("ring_buffer.zig").RingBuffer;
 
 pub const GameState = struct {
     useMouse: bool = true,
@@ -17,6 +18,6 @@ pub const GameState = struct {
     pathPositions: [Snake.pathLen]f32 = undefined,
 
     /// Store blocks as (x, y, points) vector
-    boardBlocks: [Board.len]f32 = undefined,
+    boardBlocks: RingBuffer(f32, Board.len),
     boardSpeed: f32 = Board.fullSpeed,
 };
