@@ -37,20 +37,20 @@ pub const pathStep: f32 = 0.01;
 
 pub fn init(state: *GameState) !void {
     // populate Path.pathPositions array
-    state.pathPositions[0] = Constants.screenCenterX;
-    state.pathPositions[1] = Constants.screenCenterY;
-    for (1..pathLen) |i| {
+    state.pathPositions.insert(Constants.screenCenterX);
+    state.pathPositions.insert(Constants.screenCenterY);
+    for (pathLen..1) |i| {
         const index = i * pathVecSize;
         if (index >= pathLen) break;
         const x = 0 + index;
         const y = 1 + index;
 
         if ((@as(f32, @floatFromInt(i)) * diameter) + (1.5 * @as(f32, @floatFromInt(Constants.screenCenterY))) < Constants.screenHeight) {
-            state.pathPositions[x] = Constants.screenCenterX;
-            state.pathPositions[y] = @as(f32, @floatFromInt(i)) * diameter + Constants.screenCenterY;
+            state.pathPositions.assignAt(x, Constants.screenCenterX);
+            state.pathPositions.assignAt(y, @as(f32, @floatFromInt(i)) * diameter + Constants.screenCenterY);
         } else {
-            state.pathPositions[x] = Constants.empty;
-            state.pathPositions[y] = Constants.empty;
+            _ = state.pathPositions.pop();
+            _ = state.pathPositions.pop();
         }
     }
 }
@@ -90,7 +90,7 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
         if (index >= Board.len - Board.vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
-        collisionBlock = Vector.new(state.boardBlocks[x], state.boardBlocks[y]);
+        collisionBlock = Vector.new(state.boardBlocks.elementAt(x), state.boardBlocks.elementAt(y));
         if (collisionBlock.x() == Constants.empty and collisionBlock.y() == Constants.empty) break;
 
         col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, snakeRadius);
@@ -126,14 +126,14 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
 
     // create a new node in Path if newPosition is in a valid distance from
     // previous node position in Path
-    const prevPathNode = Vector.new(state.pathPositions[1], state.pathPositions[2]);
+    const prevPathNode = Vector.new(state.pathPositions.elementAt(1), state.pathPositions.elementAt(2));
     const distanceToLastPosition = newPosition.distance(prevPathNode);
     if (distanceToLastPosition >= pathResolution) {
         addPositionInPath(newPosition, state);
     }
 
     // update snake head position
-    state.pathPositions[0] = newPosition.x();
+    state.pathPositions.assignAt(0, newPosition.x());
 }
 
 /// Moves the snake's path downward by the current [Board.boardSpeed].
@@ -151,16 +151,16 @@ fn updateSnakePathPosition(deltaTime: f32, state: *GameState) void {
         const x = 0 + index;
         const y = 1 + index;
 
-        if (state.pathPositions[x] == Constants.empty and state.pathPositions[y] == Constants.empty) break;
-        assert(state.pathPositions[x] != Constants.empty and state.pathPositions[y] != Constants.empty);
+        if (state.pathPositions.elementAt(x) == Constants.empty and state.pathPositions.elementAt(y) == Constants.empty) break;
+        assert(state.pathPositions.elementAt(x) != Constants.empty and state.pathPositions.elementAt(y) != Constants.empty);
 
         // update checkpoint position
-        const newPositionY = state.pathPositions[y] + (state.boardSpeed * deltaTime);
+        const newPositionY = state.pathPositions.elementAt(y) + (state.boardSpeed * deltaTime);
         if (newPositionY > Constants.screenHeight + 100) {
-            state.pathPositions[x] = Constants.empty;
-            state.pathPositions[y] = Constants.empty;
+            state.pathPositions.pop();
+            state.pathPositions.pop();
         } else {
-            state.pathPositions[y] = newPositionY;
+            state.pathPositions.assignAt(y, newPositionY);
         }
     }
 }

@@ -21,6 +21,7 @@ pub fn main() !void {
     rl.setTargetFPS(Constants.fps);
 
     var state = GameState{
+        .pathPositions = RingBuffer(f32, Snake.pathLen).init(),
         .boardBlocks = RingBuffer(f32, Board.len).init(),
     };
 

@@ -15,7 +15,7 @@ pub const GameState = struct {
     snakeSize: i16 = 10,
 
     /// Store positions as (x, y) vector
-    pathPositions: [Snake.pathLen]f32 = undefined,
+    pathPositions: RingBuffer(f32, Snake.pathLen),
 
     /// Store blocks as (x, y, points) vector
     boardBlocks: RingBuffer(f32, Board.len),
