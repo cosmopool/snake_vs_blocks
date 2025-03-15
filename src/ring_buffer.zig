@@ -84,6 +84,18 @@ pub fn RingBuffer(comptime T: type, comptime size: usize) type {
             return element;
         }
 
+        /// Manually set the tail of this ring buffer
+        /// This function always shrink the buffer.
+        /// If targetIndex is < self.head, the tail will be set to self.head.
+        pub fn setTail(self: *Self, targetIndex: usize) void {
+            if (targetIndex >= size) return;
+            if (targetIndex == self.writeIdx - 1) return;
+
+            const index = if (targetIndex < self.head) self.head else targetIndex;
+            if (self.full == true and index > self.writeIdx) self.full = false;
+            self.writeIdx = (index + 1) % size;
+        }
+
         pub fn reset(self: *Self) void {
             self.items = undefined;
             self.head = 0;
@@ -218,6 +230,57 @@ test "retrieve elements" {
         try testing.expectEqual(3, buffer.elementAt(2));
         buffer.insert(0);
         try testing.expectEqual(0, buffer.elementAt(2));
+    }
+}
+
+test "setTail" {
+    {
+        // not full buffer
+        var buffer = RingBuffer(i32, 7).init();
+        buffer.insert(1);
+        buffer.insert(2);
+        buffer.insert(3);
+        buffer.insert(4);
+        buffer.insert(5);
+        buffer.insert(6);
+        try testing.expectEqual(6, buffer.writeIdx);
+        try testing.expectEqual(false, buffer.full);
+        buffer.setTail(3);
+        try testing.expectEqual(4, buffer.writeIdx);
+        try testing.expectEqual(false, buffer.full);
+    }
+
+    {
+        // full buffer
+        var buffer = RingBuffer(i32, 7).init();
+        buffer.insert(1);
+        buffer.insert(2);
+        buffer.insert(3);
+        buffer.insert(4);
+        buffer.insert(5);
+        buffer.insert(6);
+        buffer.insert(7);
+        buffer.insert(8);
+        buffer.insert(9);
+        try testing.expectEqualSlices(i32, &[_]i32{ 8, 9, 3, 4, 5, 6, 7 }, &buffer.items);
+        try testing.expectEqual(2, buffer.writeIdx);
+        try testing.expectEqual(true, buffer.full);
+        try testing.expectEqual(2, buffer.head);
+        // should do nothing as tail is always writeIdx - 1
+        buffer.setTail(1);
+        try testing.expectEqual(2, buffer.writeIdx);
+        try testing.expectEqual(true, buffer.full);
+        try testing.expectEqual(2, buffer.head);
+        // should update writeIdx and full
+        buffer.setTail(5);
+        try testing.expectEqual(6, buffer.writeIdx);
+        try testing.expectEqual(false, buffer.full);
+        try testing.expectEqual(2, buffer.head);
+        // tail should never be less then head
+        buffer.setTail(1);
+        try testing.expectEqual(3, buffer.writeIdx);
+        try testing.expectEqual(false, buffer.full);
+        try testing.expectEqual(2, buffer.head);
     }
 }
 
