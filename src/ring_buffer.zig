@@ -12,7 +12,7 @@ pub fn RingBuffer(comptime T: type, comptime size: usize) type {
         /// The index of the oldest item
         head: usize = 0,
 
-        /// The index of the newest item
+        /// The index to write the newest item
         writeIdx: usize = 0,
 
         /// Boolean that tracks buffer fullness
