@@ -79,7 +79,7 @@ pub fn RingBuffer(comptime T: type, comptime size: usize) type {
 
             // update element
             const element = self.items[tail];
-            self.items[tail] = std.math.maxInt(T);
+            self.items[tail] = std.mem.zeroes(T);
             self.writeIdx = tail;
             return element;
         }
