@@ -66,8 +66,8 @@ fn update(state: *GameState) anyerror!void {
 
     const deltaTime = rl.getFrameTime();
 
-    try Board.update(deltaTime, &state);
-    try Snake.update(deltaTime, &state);
+    try Board.update(deltaTime, state);
+    try Snake.update(deltaTime, state);
 }
 
 fn draw(state: *GameState) anyerror!void {
@@ -75,8 +75,8 @@ fn draw(state: *GameState) anyerror!void {
     defer rl.endDrawing();
     rl.clearBackground(.black);
 
-    try Board.draw(&state);
-    try Snake.draw(&state);
+    try Board.draw(state);
+    try Snake.draw(state);
 
     if (state.gameOver) Utils.drawAtCenter("GAME OVER", 50, null);
     if (state.paused) Utils.drawAtCenter("PAUSED", null, null);
