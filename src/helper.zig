@@ -55,12 +55,12 @@ pub fn checkCollision(x1: f32, y1: f32, x2: f32, y2: f32, size: f32) bool {
 }
 
 /// Delete the element at [elementIndex] by shifting values past this point.
-pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !void {
+pub fn deleteVecSize3Element(elementIndex: usize, array: []f32) !void {
     const vecSize = 3;
 
-    for (elementIndex..len - 1) |i| {
+    for (elementIndex..array.len - 1) |i| {
         const index = i * vecSize;
-        if (index > len - vecSize) break;
+        if (index > array.len - vecSize) break;
         const x = 0 + index;
         const y = 1 + index;
         const z = 2 + index;
@@ -75,7 +75,7 @@ pub fn deleteVecSize3Element(elementIndex: usize, array: []f32, len: usize) !voi
         array[z] = array[z + vecSize];
 
         // is this the last element?
-        if (i < len - vecSize - 1) continue;
+        if (i < array.len - vecSize - 1) continue;
 
         array[x] = Constants.empty;
         array[y] = Constants.empty;

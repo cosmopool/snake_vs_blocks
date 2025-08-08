@@ -51,10 +51,6 @@ pub fn init(state: *GameState) !void {
     state.boardBlocks[11] = 6;
 }
 
-fn deleteBlock(self: *GameState, blockIndex: usize) !void {
-    return try Utils.deleteVecSize3Element(blockIndex, &self.boardBlocks, len);
-}
-
 pub fn update(deltaTime: f32, state: *GameState) !void {
     for (0..len) |i| {
         const index = i * vecSize;
@@ -70,7 +66,7 @@ pub fn update(deltaTime: f32, state: *GameState) !void {
         const newPositionY = state.boardBlocks[y] + (state.boardSpeed * deltaTime);
         // remove element if not visible anymore or has 0 points
         if (newPositionY > Constants.screenHeight + 100 or state.boardBlocks[points] <= 0) {
-            try deleteBlock(state, i);
+            try Utils.deleteVecSize3Element(i, &state.boardBlocks);
             continue;
         }
 
