@@ -22,33 +22,33 @@ pub const vecSize: usize = 3;
 //--------------------------------------------------------------------------------------
 
 pub fn init(state: *GameState) !void {
-    // for (0..len) |i| {
-    //     const index = i * vecSize;
-    //     if (index >= len - vecSize) break;
-    //     const x = 0 + index;
-    //     const y = 1 + index;
-    //     const points = 2 + index;
-    //
-    //     state.boardBlocks[x] = Constants.empty;
-    //     state.boardBlocks[y] = Constants.empty;
-    //     state.boardBlocks[points] = Constants.empty;
-    // }
+    for (0..len) |i| {
+        const index = i * vecSize;
+        if (index >= len - vecSize) break;
+        const x = 0 + index;
+        const y = 1 + index;
+        const points = 2 + index;
 
-    state.boardBlocks.insert(2 * Constants.screenCellSize);
-    state.boardBlocks.insert(0);
-    state.boardBlocks.insert(5);
+        state.boardBlocks[x] = Constants.empty;
+        state.boardBlocks[y] = Constants.empty;
+        state.boardBlocks[points] = Constants.empty;
+    }
 
-    state.boardBlocks.insert(1 * Constants.screenCellSize);
-    state.boardBlocks.insert(0);
-    state.boardBlocks.insert(3);
+    state.boardBlocks[0] = 2 * Constants.screenCellSize;
+    state.boardBlocks[1] = 0;
+    state.boardBlocks[2] = 5;
 
-    state.boardBlocks.insert(2 * Constants.screenCellSize);
-    state.boardBlocks.insert(0);
-    state.boardBlocks.insert(4);
+    state.boardBlocks[3] = 1 * Constants.screenCellSize;
+    state.boardBlocks[4] = 0;
+    state.boardBlocks[5] = 3;
 
-    state.boardBlocks.insert(3 * Constants.screenCellSize);
-    state.boardBlocks.insert(0);
-    state.boardBlocks.insert(6);
+    state.boardBlocks[6] = 2 * Constants.screenCellSize;
+    state.boardBlocks[7] = 0;
+    state.boardBlocks[8] = 4;
+
+    state.boardBlocks[9] = 3 * Constants.screenCellSize;
+    state.boardBlocks[10] = 0;
+    state.boardBlocks[11] = 6;
 }
 
 fn deleteBlock(self: *GameState, blockIndex: usize) !void {
@@ -63,18 +63,18 @@ pub fn update(deltaTime: f32, state: *GameState) !void {
         const y = 1 + index;
         const points = 2 + index;
 
-        if (state.boardBlocks.elementAt(x) == null and state.boardBlocks.elementAt(y) == null) break;
-        assert(state.boardBlocks.elementAt(x) != null and state.boardBlocks.elementAt(y) != null);
+        if (state.boardBlocks[x] == Constants.empty and state.boardBlocks[y] == Constants.empty) break;
+        assert(state.boardBlocks[x] != Constants.empty and state.boardBlocks[y] != Constants.empty);
 
         // update element position
-        const newPositionY = state.boardBlocks.elementAt(y) + (state.boardSpeed * deltaTime);
+        const newPositionY = state.boardBlocks[y] + (state.boardSpeed * deltaTime);
         // remove element if not visible anymore or has 0 points
-        if (newPositionY > Constants.screenHeight + 100 or state.boardBlocks.elementAt(points) <= 0) {
+        if (newPositionY > Constants.screenHeight + 100 or state.boardBlocks[points] <= 0) {
             try deleteBlock(state, i);
             continue;
         }
 
-        state.boardBlocks.assignAt(y, newPositionY);
+        state.boardBlocks[y] = newPositionY;
     }
 }
 
@@ -83,13 +83,13 @@ pub fn draw(state: *GameState) !void {
         const index = i * vecSize;
         if (index >= len / vecSize) break;
 
-        const x = state.boardBlocks.elementAt(0 + index);
-        const y = state.boardBlocks.elementAt(1 + index);
-        const points = state.boardBlocks.elementAt(2 + index);
+        const x = state.boardBlocks[0 + index];
+        const y = state.boardBlocks[1 + index];
+        const points = state.boardBlocks[2 + index];
 
         // the path beyond this point is all empty, no need to check
-        if (x == null and y == null and points == null) break;
-        assert(x != null and y != null and points != null);
+        if (x == Constants.empty and y == Constants.empty and points == Constants.empty) break;
+        assert(x != Constants.empty and y != Constants.empty and points != Constants.empty);
 
         const rec: rl.Rectangle = .{
             .x = x,
