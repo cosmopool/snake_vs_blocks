@@ -176,7 +176,7 @@ pub fn draw(state: *GameState) !void {
             .width = Constants.screenCellSize,
             .height = Constants.screenCellSize,
         };
-        rl.drawRectangleRounded(rec, 0.2, 0, interpolateColor(points));
+        rl.drawRectangleRounded(rec, 0.2, 0, generateColorForGivingBlockPoint(points));
 
         var pointsText: [20]u8 = undefined;
         const formattedText = try std.fmt.bufPrint(&pointsText, "{d:0.0}", .{points});
@@ -191,7 +191,7 @@ pub fn draw(state: *GameState) !void {
     }
 }
 
-fn interpolateColor(n: f32) rl.Color {
+fn generateColorForGivingBlockPoint(n: f32) rl.Color {
     assert(n >= 0 and n <= 50);
     const clampedValue = @max(1, @min(50, n));
     const t: f32 = (clampedValue - 1) / (50 - 1);
