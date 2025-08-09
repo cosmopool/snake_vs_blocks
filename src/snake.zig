@@ -116,7 +116,7 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
 
         const points = 2 + (blockIndex * Board.vecSize);
         if (state.boardBlocks[points] > 0) {
-            state.snakeSize -= 1;
+            if (!state.godMode) state.snakeSize -= 1;
             state.boardBlocks[points] -= 1;
         }
     } else {

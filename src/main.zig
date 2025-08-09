@@ -54,6 +54,7 @@ fn handleInput(state: *GameState) void {
     if (rl.isKeyPressed(.space)) state.paused = !state.paused;
     if (rl.isKeyPressed(.d)) state.showPath = !state.showPath;
     if (rl.isKeyPressed(.b)) state.showBody = !state.showBody;
+    if (rl.isKeyPressed(.g)) state.godMode = !state.godMode;
     if (rl.isKeyPressed(.v)) {
         if (state.boardSpeed == Board.fullSpeed) {
             state.boardSpeed = 0;

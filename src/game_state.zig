@@ -10,6 +10,7 @@ pub const GameState = struct {
     gameOver: bool = false,
     showPath: bool = false,
     showBody: bool = true,
+    godMode: bool = false,
 
     snakeSize: i16 = 10,
 
