@@ -92,7 +92,7 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
         collisionBlock = Vector.new(state.boardBlocks[x], state.boardBlocks[y]);
         if (collisionBlock.x() == Constants.empty and collisionBlock.y() == Constants.empty) break;
 
-        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock, radius);
+        col = Utils.checkCollisionWithBoxWithDistance(newPosition, collisionBlock);
         if (col.isColliding) break;
 
         newPositionCrossesBlock = Utils.checkIntersectionWithBlockSides(lastPosition, newPosition, collisionBlock);
@@ -189,7 +189,7 @@ fn addPositionInPath(position: Vector, state: *GameState) void {
 }
 
 fn drawBodyNodeAt(x: f32, y: f32) void {
-    rl.drawCircle(@intFromFloat(x), @intFromFloat(y), @floatFromInt(radius), .red);
+    rl.drawCircle(@intFromFloat(x), @intFromFloat(y), radius, .red);
 }
 
 fn drawLineFrom(start: Vector, end: Vector) void {
