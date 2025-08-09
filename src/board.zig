@@ -57,7 +57,7 @@ pub fn init(state: *GameState) !void {
 
 pub fn update(deltaTime: f32, state: *GameState) !void {
     state.distanceFromLastBlock += @intFromFloat(state.boardSpeed);
-    try spawnBlocks(&state.random, state);
+    try spawnBlocks(state);
     try updateBlocksPosition(deltaTime, state);
 }
 
@@ -84,13 +84,13 @@ fn updateBlocksPosition(deltaTime: f32, state: *GameState) !void {
     }
 }
 
-fn spawnBlocks(rand: *const std.Random, state: *GameState) !void {
-    const distance: u16 = if (rand.boolean()) 10000 else 20000;
+fn spawnBlocks(state: *GameState) !void {
+    const distance: u16 = if (state.random.boolean()) 10000 else 20000;
 
     if (state.distanceFromLastBlock < distance) return;
     state.distanceFromLastBlock = 0;
 
-    const quantityIndex: u8 = rand.intRangeAtMost(u8, 0, spawnRule.len - 1);
+    const quantityIndex: u8 = state.random.intRangeAtMost(u8, 0, spawnRule.len - 1);
     const quantityToSpawn: u8 = spawnRule[quantityIndex];
 
     if (quantityToSpawn == 0) return;
@@ -129,15 +129,15 @@ fn spawnBlocks(rand: *const std.Random, state: *GameState) !void {
         const points: usize = 2 + index;
 
         var position: f32 = @floatFromInt(quantityRemaning);
-        if (quantityToSpawn == 1) position = @floatFromInt(rand.intRangeAtMost(u8, 1, 5));
+        if (quantityToSpawn == 1) position = @floatFromInt(state.random.intRangeAtMost(u8, 1, 5));
         if (quantityToSpawn == 2) {
-            if (quantityRemaning == 1) position = @floatFromInt(rand.intRangeAtMost(u8, 0, 2));
-            if (quantityRemaning == 0) position = @floatFromInt(rand.intRangeAtMost(u8, 3, 4));
+            if (quantityRemaning == 1) position = @floatFromInt(state.random.intRangeAtMost(u8, 0, 2));
+            if (quantityRemaning == 0) position = @floatFromInt(state.random.intRangeAtMost(u8, 3, 4));
         }
 
         state.boardBlocks[x] = position * Constants.screenCellSize;
         state.boardBlocks[y] = -Constants.screenCellSize;
-        state.boardBlocks[points] = @floatFromInt(rand.intRangeAtMost(u8, 1, 50));
+        state.boardBlocks[points] = @floatFromInt(state.random.intRangeAtMost(u8, 1, 50));
     }
 }
 
