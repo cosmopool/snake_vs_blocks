@@ -20,4 +20,6 @@ pub const GameState = struct {
     boardBlocks: [Board.len]f32 = undefined,
     boardSpeed: f32 = Board.fullSpeed,
     distanceFromLastBlock: u16 = 0,
+
+    random: std.Random = undefined,
 };

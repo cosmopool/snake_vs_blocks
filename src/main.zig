@@ -21,6 +21,13 @@ pub fn main() !void {
 
     var state = GameState{};
 
+    var prng = std.Random.DefaultPrng.init(blk: {
+        var seed: u64 = undefined;
+        try std.posix.getrandom(std.mem.asBytes(&seed));
+        break :blk seed;
+    });
+    state.random = prng.random();
+
     try Board.init(&state);
     try Snake.init(&state);
     //--------------------------------------------------------------------------------------

@@ -18,24 +18,13 @@ pub const len: usize = 1000;
 /// Used for iterating over and processing the data efficiently.
 pub const vecSize: usize = 3;
 
-var random: *const std.Random = undefined;
-// const spawnRule = [_]u8{ 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 5, 5, 5, 0, 0, 0 };
 var spawnRule = [_]u8{ 1, 1, 1, 1, 2, 2, 2, 5, 5, 5 };
-// var spawnRule = [_]u8{ 1, 1, 1, 1, 2, 2, 2 };
-// const spawnRule = [_]u8{ 2, 2, 2 };
 
 // end constants
 //--------------------------------------------------------------------------------------
 
 pub fn init(state: *GameState) !void {
-    var prng = std.rand.DefaultPrng.init(blk: {
-        var seed: u64 = undefined;
-        try std.posix.getrandom(std.mem.asBytes(&seed));
-        break :blk seed;
-    });
-    random = &prng.random();
-    random.shuffleWithIndex(u8, &spawnRule, usize);
-    std.debug.print("{d}\n", .{spawnRule});
+    state.random.shuffleWithIndex(u8, &spawnRule, usize);
 
     for (0..len) |i| {
         const index = i * vecSize;
@@ -67,7 +56,8 @@ pub fn init(state: *GameState) !void {
 }
 
 pub fn update(deltaTime: f32, state: *GameState) !void {
-    try spawnBlocks(random, state);
+    state.distanceFromLastBlock += @intFromFloat(state.boardSpeed);
+    try spawnBlocks(&state.random, state);
     try updateBlocksPosition(deltaTime, state);
 }
 
@@ -107,11 +97,11 @@ fn spawnBlocks(rand: *const std.Random, state: *GameState) !void {
 
     // find empty idx in blocks array
     // check if this index has [quantity] positions Constants.empty to place new blocks
-    // const startPlacingAtIdx: usize = i;
     var haveTheSpaceNecessary: bool = true;
     var startPlacingAtIdx: usize = 0;
     for (startPlacingAtIdx..len) |i| {
         const index = i * vecSize;
+        assert(index < state.boardBlocks.len);
         if (index >= len / vecSize) break;
 
         if (i - startPlacingAtIdx >= quantityToSpawn) {
@@ -119,22 +109,24 @@ fn spawnBlocks(rand: *const std.Random, state: *GameState) !void {
             break;
         }
 
-        if (state.blocks[0 + index] != Constants.empty and state.blocks[1 + index] != Constants.empty) {
+        if (state.boardBlocks[0 + index] != Constants.empty and state.boardBlocks[1 + index] != Constants.empty) {
             startPlacingAtIdx = i + 1;
         }
     }
 
-    if (!haveTheSpaceNecessary) {
-        // print("do not have the space necessary\n", .{});
-        return;
-    }
+    if (!haveTheSpaceNecessary) return;
 
     var quantityRemaning = quantityToSpawn;
     for (startPlacingAtIdx..startPlacingAtIdx + quantityToSpawn) |h| {
         assert(quantityRemaning >= 0);
         quantityRemaning -= 1;
         const index: usize = h * vecSize;
+        assert(index < state.boardBlocks.len);
         if (index >= len / vecSize) break;
+
+        const x: usize = 0 + index;
+        const y: usize = 1 + index;
+        const points: usize = 2 + index;
 
         var position: f32 = @floatFromInt(quantityRemaning);
         if (quantityToSpawn == 1) position = @floatFromInt(rand.intRangeAtMost(u8, 1, 5));
@@ -143,19 +135,11 @@ fn spawnBlocks(rand: *const std.Random, state: *GameState) !void {
             if (quantityRemaning == 0) position = @floatFromInt(rand.intRangeAtMost(u8, 3, 4));
         }
 
-        // print("pos: {d}, qtd remaning: {d}\n", .{ position, quantityRemaning });
-        state.blocks[0 + index] = position * Constants.screenCellSize; // x position
-        state.blocks[1 + index] = -Constants.screenCellSize; // y position
-        state.blocks[2 + index] = @floatFromInt(rand.intRangeAtMost(u8, 1, 50)); // Points
+        state.boardBlocks[x] = position * Constants.screenCellSize;
+        state.boardBlocks[y] = -Constants.screenCellSize;
+        state.boardBlocks[points] = @floatFromInt(rand.intRangeAtMost(u8, 1, 50));
     }
 }
-
-// fn createBlock(index: usize, x: f32, y: f32, points: f32) !void {
-//     _ = y; // autofix
-//     Board.blocks[0 + index] = x; // x position
-//     Board.blocks[1 + index] = -Screen.cellSize; // y position
-//     Board.blocks[2 + index] = points; // Points
-// }
 
 pub fn draw(state: *GameState) !void {
     for (0..len) |i| {
