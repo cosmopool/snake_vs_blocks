@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub const Empty = -101;
-const Utils = @import("helper.zig");
+const Utils = @import("utils.zig");
 
 pub const Game = struct {
     useMouse: bool = true,

@@ -2,7 +2,7 @@ const std = @import("std");
 const assert = std.debug.assert;
 const rl = @import("raylib");
 
-const Utils = @import("helper.zig");
+const Utils = @import("utils.zig");
 const GameState = @import("game_state.zig").GameState;
 const Constants = @import("constants.zig");
 

@@ -1,5 +1,5 @@
 const std = @import("std");
-const Utils = @import("helper.zig");
+const Utils = @import("utils.zig");
 const Constants = @import("constants.zig");
 const Board = @import("board.zig");
 const Snake = @import("snake.zig");
