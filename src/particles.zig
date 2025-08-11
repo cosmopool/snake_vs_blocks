@@ -1,7 +1,9 @@
 const std = @import("std");
 const rl = @import("raylib");
 
+const Constants = @import("constants.zig");
 const GameState = @import("game_state.zig").GameState;
+const Vector = @import("vector.zig").Vector;
 
 pub const vecSize: usize = 5;
 pub const len: u16 = vecSize * 1000;
@@ -47,15 +49,24 @@ fn createParticle(state: *GameState, quantity: usize) !void {
         const idx = try getParticleIndexes(i);
         std.debug.assert(idx.index < len - vecSize);
 
-        const snake_head_x: i32 = @intFromFloat(state.pathPositions[0]);
-        const snake_head_y: i32 = @intFromFloat(state.pathPositions[1]);
+        // const snake_head_x: i32 = @intFromFloat(state.pathPositions[0]);
+        // const snake_head_y: i32 = @intFromFloat(state.pathPositions[1]);
 
         state.particles[idx.vel_x] = @as(f32, @floatFromInt(rl.getRandomValue(-20, 20))) * 0.1;
         state.particles[idx.vel_y] = @as(f32, @floatFromInt(rl.getRandomValue(-50, -20))) * 0.1;
-        state.particles[idx.pos_x] = @as(f32, @floatFromInt(rl.getRandomValue((snake_head_x - 20) * 10, (snake_head_x + 20) * 10))) * 0.1;
-        state.particles[idx.pos_y] = @floatFromInt(snake_head_y);
+        // state.particles[idx.pos_x] = @as(f32, @floatFromInt(rl.getRandomValue((snake_head_x - 20) * 10, (snake_head_x + 20) * 10))) * 0.1;
+        // state.particles[idx.pos_x] = @floatFromInt(snake_head_x);
+        // state.particles[idx.pos_y] = @floatFromInt(snake_head_y);
+        state.particles[idx.pos_x] = @floatFromInt(state.random.uintLessThan(u32, Constants.screenWidth));
+        state.particles[idx.pos_y] = @floatFromInt(state.random.uintLessThan(u32, Constants.screenHeight));
         state.particles[idx.size] = 5;
 
+        // const m = rl.getMousePosition();
+        // const x = m.x;
+        // const y = m.y;
+        // const x = state.pathPositions[0];
+        // const y = state.pathPositions[1];
+        // std.debug.print("-----> {d}, {d} | {d}, {d}\n", .{ x, y, state.particles[idx.pos_x], state.particles[idx.pos_y] });
         state.particleStatus[idx.index] = true;
         left -= 1;
     }
@@ -87,9 +98,9 @@ pub fn update(state: *GameState) !void {
 
         // reduce size 30% of the time
         if (state.random.uintLessThan(u16, 100) > 30) continue;
-        particle[idx.size] -= 1;
+        particle[idx.size] = particle[idx.size] - 1;
         if (particle[idx.size] > 0) continue;
-        state.particleStatus[idx.index] = false;
+        state.particleStatus[i] = false;
     }
 }
 
@@ -102,8 +113,8 @@ pub fn draw(state: *GameState) !void {
         if (!isParticleActive) continue;
 
         const x: f32 = state.particles[idx.pos_x];
-        const y: f32 = state.particles[idx.pos_x];
+        const y: f32 = state.particles[idx.pos_y];
         const size: f32 = state.particles[idx.size];
-        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .red);
+        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .pink);
     }
 }
