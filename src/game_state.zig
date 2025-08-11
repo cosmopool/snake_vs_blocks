@@ -3,6 +3,7 @@ const Utils = @import("utils.zig");
 const Constants = @import("constants.zig");
 const Board = @import("board.zig");
 const Snake = @import("snake.zig");
+const Particles = @import("particles.zig");
 
 pub const GameState = struct {
     useMouse: bool = true,
@@ -21,6 +22,13 @@ pub const GameState = struct {
     boardBlocks: [Board.len]f32 = undefined,
     boardSpeed: f32 = Board.fullSpeed,
     distanceFromLastBlock: u16 = 0,
+
+    // todo(kaio): set particle docstring
+    /// Store particles as () vector
+    particles: [Particles.len]f32 = undefined,
+    particleStatus: [Particles.len / Particles.vecSize]bool = undefined,
+
+    isColliding: bool = false,
 
     random: std.Random = undefined,
 };

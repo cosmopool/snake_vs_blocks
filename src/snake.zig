@@ -111,7 +111,8 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
         newPosition = lastPosition;
     }
 
-    if (col.isColliding and !col.isSideCollision) {
+    state.isColliding = col.isColliding and !col.isSideCollision;
+    if (state.isColliding) {
         state.boardSpeed = 0;
 
         const points = 2 + (blockIndex * Board.vecSize);

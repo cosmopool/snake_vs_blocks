@@ -6,6 +6,7 @@ const rl = @import("raylib");
 
 const Snake = @import("snake.zig");
 const Board = @import("board.zig");
+const Particles = @import("particles.zig");
 const Utils = @import("utils.zig");
 const Constants = @import("constants.zig");
 
@@ -30,6 +31,7 @@ pub fn main() !void {
 
     try Board.init(&state);
     try Snake.init(&state);
+    Particles.init(&state);
     //--------------------------------------------------------------------------------------
 
     // fix for first position
@@ -72,6 +74,7 @@ fn update(state: *GameState) anyerror!void {
 
     try Board.update(deltaTime, state);
     try Snake.update(deltaTime, state);
+    try Particles.update(state);
 }
 
 fn draw(state: *GameState) anyerror!void {
@@ -81,6 +84,7 @@ fn draw(state: *GameState) anyerror!void {
 
     try Board.draw(state);
     try Snake.draw(state);
+    try Particles.draw(state);
 
     if (state.gameOver) Utils.drawAtCenter("GAME OVER", 50, null);
     if (state.paused) Utils.drawAtCenter("PAUSED", null, null);
