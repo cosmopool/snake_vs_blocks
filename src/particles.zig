@@ -67,7 +67,7 @@ fn createParticle(state: *GameState, quantity: usize) !void {
         // const x = state.pathPositions[0];
         // const y = state.pathPositions[1];
         // std.debug.print("-----> {d}, {d} | {d}, {d}\n", .{ x, y, state.particles[idx.pos_x], state.particles[idx.pos_y] });
-        state.particleStatus[idx.index] = true;
+        state.particleStatus[i] = true;
         left -= 1;
     }
 }
