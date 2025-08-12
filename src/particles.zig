@@ -88,18 +88,17 @@ pub fn update(state: *GameState) !void {
         const isParticleActive = state.particleStatus[i];
         if (!isParticleActive) continue;
 
-        var particle = state.particles;
         // update velocity = velocity + acc
-        particle[idx.vel_x] = particle[idx.vel_x] + acc_x;
-        particle[idx.vel_y] = particle[idx.vel_y] + acc_y;
+        state.particles[idx.vel_x] = state.particles[idx.vel_x] + acc_x;
+        state.particles[idx.vel_y] = state.particles[idx.vel_y] + acc_y;
         // update position = position + velocity
-        particle[idx.pos_x] = particle[idx.pos_x] + particle[idx.vel_x];
-        particle[idx.pos_y] = particle[idx.pos_y] + particle[idx.vel_y];
+        state.particles[idx.pos_x] = state.particles[idx.pos_x] + state.particles[idx.vel_x];
+        state.particles[idx.pos_y] = state.particles[idx.pos_y] + state.particles[idx.vel_y];
 
         // reduce size 30% of the time
         if (state.random.uintLessThan(u16, 100) > 30) continue;
-        particle[idx.size] = particle[idx.size] - 1;
-        if (particle[idx.size] > 0) continue;
+        state.particles[idx.size] = state.particles[idx.size] - 1;
+        if (state.particles[idx.size] > 0) continue;
         state.particleStatus[i] = false;
     }
 }
