@@ -52,6 +52,7 @@ fn createParticle(state: *GameState, quantity: usize) !void {
         const snake_head_x: i32 = @intFromFloat(state.pathPositions[0]);
         const snake_head_y: i32 = @intFromFloat(state.pathPositions[1]);
 
+        // TODO(kaio): better to use state.random to generate numbers?
         state.particles[idx.vel_x] = @as(f32, @floatFromInt(rl.getRandomValue(-20, 20))) * 0.1;
         state.particles[idx.vel_y] = @as(f32, @floatFromInt(rl.getRandomValue(-50, -20))) * 0.1;
         state.particles[idx.pos_x] = @as(f32, @floatFromInt(rl.getRandomValue((snake_head_x - 20) * 10, (snake_head_x + 20) * 10))) * 0.1;
