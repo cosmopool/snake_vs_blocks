@@ -105,6 +105,6 @@ pub fn draw(state: *GameState) !void {
         const x: f32 = state.particles[idx.pos_x];
         const y: f32 = state.particles[idx.pos_y];
         const size: f32 = state.particles[idx.size];
-        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .pink);
+        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .red);
     }
 }
