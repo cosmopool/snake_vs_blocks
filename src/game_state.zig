@@ -22,11 +22,14 @@ pub const GameState = struct {
     boardBlocks: [Board.len]f32 = undefined,
     boardSpeed: f32 = Board.fullSpeed,
     distanceFromLastBlock: u16 = 0,
+    blockThatExploded: [2]f32 = undefined,
 
     // todo(kaio): set particle docstring
     /// Store particles as () vector
     particles: [Particles.len]f32 = undefined,
     particleStatus: [Particles.len / Particles.vecSize]bool = undefined,
+    blockParticles: [Particles.len]f32 = undefined,
+    blockParticleStatus: [Particles.len / Particles.vecSize]bool = undefined,
 
     isColliding: bool = false,
 

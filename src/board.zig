@@ -26,6 +26,9 @@ var spawnRule = [_]u8{ 1, 1, 1, 1, 2, 2, 2, 5, 5, 5 };
 pub fn init(state: *GameState) !void {
     state.random.shuffleWithIndex(u8, &spawnRule, usize);
 
+    state.blockThatExploded[0] = 0;
+    state.blockThatExploded[1] = 0;
+
     for (0..len) |i| {
         const index = i * vecSize;
         if (index >= len - vecSize) break;
@@ -76,6 +79,8 @@ fn updateBlocksPosition(deltaTime: f32, state: *GameState) !void {
         const newPositionY = state.boardBlocks[y] + (state.boardSpeed * deltaTime);
         // remove element if not visible anymore or has 0 points
         if (newPositionY > Constants.screenHeight + 100 or state.boardBlocks[points] <= 0) {
+            state.blockThatExploded[0] = state.boardBlocks[0];
+            state.blockThatExploded[1] = state.boardBlocks[1];
             try Utils.deleteVecSize3Element(i, &state.boardBlocks);
             continue;
         }
