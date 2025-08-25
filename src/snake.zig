@@ -117,8 +117,8 @@ fn updateSnakePosition(deltaTime: f32, state: *GameState) !void {
 
         const points = 2 + (blockIndex * Board.vecSize);
         if (state.boardBlocks[points] > 0) {
-            if (!state.godMode) state.snakeSize -= 1;
-            state.boardBlocks[points] -= 1;
+            if (!state.godMode) state.snakeSize -= 1 * 0.33;
+            state.boardBlocks[points] -= 1 * 0.33;
         }
     } else {
         state.boardSpeed = Board.fullSpeed;
@@ -221,7 +221,7 @@ pub fn draw(state: *GameState) !void {
 
     // draw circles between path nodes
     var lastCircle = Vector.new(state.pathPositions[0], state.pathPositions[1]);
-    var remaningCircles: i16 = state.snakeSize;
+    var remaningCircles: f32 = state.snakeSize;
     for (1..pathLen) |i| {
         const index = i * pathVecSize;
         if (index >= pathLen / pathVecSize) break;

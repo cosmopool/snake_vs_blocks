@@ -13,7 +13,7 @@ pub const GameState = struct {
     showBody: bool = true,
     godMode: bool = false,
 
-    snakeSize: i16 = 10,
+    snakeSize: f32 = 100,
 
     /// Store positions as (x, y) vector
     pathPositions: [Snake.pathLen]f32 = undefined,

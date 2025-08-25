@@ -176,7 +176,7 @@ pub fn draw(state: *GameState) !void {
 }
 
 fn generateColorForGivingBlockPoint(n: f32) rl.Color {
-    assert(n >= 0 and n <= 50);
+    assert(n >= -50 and n <= 50);
     const clampedValue = @max(1, @min(50, n));
     const t: f32 = (clampedValue - 1) / (50 - 1);
 
