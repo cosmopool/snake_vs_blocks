@@ -5,10 +5,38 @@ const Constants = @import("constants.zig");
 const GameState = @import("game_state.zig").GameState;
 const Vector = @import("vector.zig").Vector;
 
+const math = std.math;
+
 pub const vecSize: usize = 5;
 pub const len: u16 = vecSize * 1000;
 const acc_x: f32 = 0.0;
 const acc_y: f32 = 0.5;
+
+pub fn init(state: *GameState) void {
+    for (0..state.particleStatus.len - 1) |i| {
+        state.particleStatus[i] = false;
+    }
+}
+
+pub fn update(state: *GameState) !void {
+    try createParticle(state, 2);
+    try updateParticles(state);
+}
+
+pub fn draw(state: *GameState) !void {
+    for (0..state.particleStatus.len - 1) |i| {
+        const idx = try getParticleIndexes(i);
+        std.debug.assert(idx.index < len * vecSize);
+
+        const isParticleActive = state.particleStatus[i];
+        if (!isParticleActive) continue;
+
+        const x: f32 = state.particles[idx.pos_x];
+        const y: f32 = state.particles[idx.pos_y];
+        const size: f32 = state.particles[idx.size];
+        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .red);
+    }
+}
 
 const ParticleIndexes = struct {
     index: usize,
@@ -40,6 +68,8 @@ fn getParticleIndexes(i: usize) !ParticleIndexes {
 }
 
 fn createParticle(state: *GameState, quantity: usize) !void {
+    if (!state.isColliding) return;
+
     var left = quantity;
     for (0..state.particleStatus.len - 1) |i| {
         if (left <= 0) break;
@@ -64,15 +94,7 @@ fn createParticle(state: *GameState, quantity: usize) !void {
     }
 }
 
-pub fn init(state: *GameState) void {
-    for (0..state.particleStatus.len - 1) |i| {
-        state.particleStatus[i] = false;
-    }
-}
-
-pub fn update(state: *GameState) !void {
-    if (state.isColliding) try createParticle(state, 5);
-
+pub fn updateParticles(state: *GameState) !void {
     for (0..state.particleStatus.len - 1) |i| {
         const idx = try getParticleIndexes(i);
         std.debug.assert(idx.index < len - vecSize);
@@ -92,20 +114,5 @@ pub fn update(state: *GameState) !void {
         state.particles[idx.size] = state.particles[idx.size] - 1;
         if (state.particles[idx.size] > 0) continue;
         state.particleStatus[i] = false;
-    }
-}
-
-pub fn draw(state: *GameState) !void {
-    for (0..state.particleStatus.len - 1) |i| {
-        const idx = try getParticleIndexes(i);
-        std.debug.assert(idx.index < len * vecSize);
-
-        const isParticleActive = state.particleStatus[i];
-        if (!isParticleActive) continue;
-
-        const x: f32 = state.particles[idx.pos_x];
-        const y: f32 = state.particles[idx.pos_y];
-        const size: f32 = state.particles[idx.size];
-        rl.drawCircle(@intFromFloat(x), @intFromFloat(y), size, .red);
     }
 }
