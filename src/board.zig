@@ -79,8 +79,8 @@ fn updateBlocksPosition(deltaTime: f32, state: *GameState) !void {
         const newPositionY = state.boardBlocks[y] + (state.boardSpeed * deltaTime);
         // remove element if not visible anymore or has 0 points
         if (newPositionY > Constants.screenHeight + 100 or state.boardBlocks[points] <= 0) {
-            state.blockThatExploded[0] = state.boardBlocks[0];
-            state.blockThatExploded[1] = state.boardBlocks[1];
+            state.blockThatExploded[0] = state.boardBlocks[x];
+            state.blockThatExploded[1] = state.boardBlocks[y];
             try Utils.deleteVecSize3Element(i, &state.boardBlocks);
             continue;
         }

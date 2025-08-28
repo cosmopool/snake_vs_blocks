@@ -26,8 +26,8 @@ pub const GameState = struct {
 
     // todo(kaio): set particle docstring
     /// Store particles as () vector
-    particles: [Particles.len]f32 = undefined,
-    particleStatus: [Particles.len / Particles.vecSize]bool = undefined,
+    snakeParticles: [Particles.len]f32 = undefined,
+    snakeParticlesStatus: [Particles.len / Particles.vecSize]bool = undefined,
     blockParticles: [Particles.len]f32 = undefined,
     blockParticleStatus: [Particles.len / Particles.vecSize]bool = undefined,
 

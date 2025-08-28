@@ -74,7 +74,7 @@ fn update(state: *GameState) anyerror!void {
 
     try Board.update(deltaTime, state);
     try Snake.update(deltaTime, state);
-    try Particles.update(state);
+    try Particles.update(deltaTime, state);
 }
 
 fn draw(state: *GameState) anyerror!void {
