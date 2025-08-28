@@ -90,6 +90,8 @@ fn updateBlocksPosition(deltaTime: f32, state: *GameState) !void {
 }
 
 fn spawnBlocks(state: *GameState) !void {
+    // TODO(kaio): this is totally broke for higher fps. need a way to count the exact distante from blocks in the y axis
+    // the higher the fps the closer the blocks are spawed
     const distance: u16 = if (state.random.boolean()) 10000 else 20000;
 
     if (state.distanceFromLastBlock < distance) return;
