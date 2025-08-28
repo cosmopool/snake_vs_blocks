@@ -112,13 +112,13 @@ fn createBlockParticle(state: *GameState, quantity: usize) !void {
         const particle_y = radius * math.sin(t);
 
         // TODO(kaio): better to use state.random to generate numbers?
-        state.blockParticles[idx.vel_x] = particle_x * 0.1;
-        state.blockParticles[idx.vel_y] = particle_y * 0.1;
+        state.blockParticles[idx.vel_x] = particle_x * 0.5;
+        state.blockParticles[idx.vel_y] = particle_y * 0.5;
         state.blockParticles[idx.pos_x] = particle_x + Constants.screenCellSize / 2 + x;
         state.blockParticles[idx.pos_y] = particle_y + Constants.screenCellSize / 2 + y;
         state.blockParticles[idx.size] = 3;
-        state.blockParticles[idx.acc_x] = particle_x * 0.05;
-        state.blockParticles[idx.acc_y] = particle_y * 0.05;
+        state.blockParticles[idx.acc_x] = particle_x * 0.2;
+        state.blockParticles[idx.acc_y] = particle_y * 0.2;
 
         state.blockParticleStatus[i] = true;
         left -= 1;
